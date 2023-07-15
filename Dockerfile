@@ -1,6 +1,6 @@
-FROM julia:1.9.1
-RUN julia -e 'using Pkg; Pkg.add("ArgParse"); Pkg.add("JSON")'
-RUN mkdir /BackupX
-WORKDIR /BackupX/
-COPY . /BackupX/
+FROM julia:1.9.2
+RUN julia -e 'using Pkg; Pkg.add("ArgParse");'
+RUN mkdir /X9
+WORKDIR /X9/
+COPY . /X9/
 CMD [ "julia" ]

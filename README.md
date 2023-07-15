@@ -12,19 +12,19 @@
 # then run this commands in terminal:
 
 * 1. julia -e 'using Pkg; Pkg.add("ArgParse")'
-* 2. git clone https://github.com/mrmeeseeks01/BackupX.git
-* 3. cd BackupX/
-* 4. julia BackupX.jl -h
+* 2. git https://github.com/mrmeeseeks01/X9.git
+* 3. cd X9/
+* 4. julia x9.jl -h
 
 
 # or you can use docker:
 
-* 1. git clone https://github.com/mrmeeseeks01/BackupX.git
-* 2. cd BackupX/
-* 3. docker build -t backupx .
-* 4. docker run -it backupx
+* 1. git clone https://github.com/mrmeeseeks01/X9.git
+* 2. cd X9/
+* 3. docker build -t X9 .
+* 4. docker run -it X9
 * 5. press ; to enabled shell mode
-* 6. julia BackupX.jl -h
+* 6. julia x9.jl -h
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Switches
@@ -47,32 +47,157 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Examples
+```
+  url = https://example.com/path1/?param1=value1&param2=value2
 
-  url = https://memoryleaks.ir/path1/?param1=value1&param2=value2
+  parmas.txt ->   user id card charge
 
-  parmas.txt:   
-    user
-    id
-    card
-    charge
+  values.txt ->   HELLO BYE
+```
 
-  values.txt:   
-    HELLO
-    BYE
+<br>
 
 * for custom threads, should pass -t [int] to julia
 ~~~
 > julia -t 2 x9.jl [switches]
 ~~~
 
-~~~
-> julia x9.jl -u "https://memoryleaks.ir/path1/?param1=value1&param2=value2" -p p.txt -v v.txt.txt --ignore
+<br>
 
-* https://memoryleaks.ir/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO&card=HELLO&charge=HELLO
-* https://memoryleaks.ir/path1/?param1=value1&param2=value2&user=BYE&id=BYE&card=BYE&charge=BYE
+* using --ignore option
+~~~
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --ignore
+
+output:
+https://example.com/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO&card=HELLO&charge=HELLO
+https://example.com/path1/?param1=value1&param2=value2&user=BYE&id=BYE&card=BYE&charge=BYE
 ~~~
 
-* for example generate wordlist by single url with this pattern: $subdomain.$domain.$ext$num.$y-$m-$d
+<br>
+
+* using --ignore option with chunk
 ~~~
-> julia BackupX.jl -u https://sub1-sub2.sub3.domain.tld -p pattern.json  -w wordlist.txt -e extensions.txt -n 1-100 -y 2021-2023 -m 1-12 -d 1-30
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --ignore -c 3 
+
+output:
+https://example.com/path1/?param1=value1&param2=value2&user=HELLO
+https://example.com/path1/?param1=value1&param2=value2&id=HELLO
+https://example.com/path1/?param1=value1&param2=value2&card=HELLO
+https://example.com/path1/?param1=value1&param2=value2&charge=HELLO
+https://example.com/path1/?param1=value1&param2=value2&user=BYE
+https://example.com/path1/?param1=value1&param2=value2&id=BYE
+https://example.com/path1/?param1=value1&param2=value2&card=BYE
+https://example.com/path1/?param1=value1&param2=value2&charge=BYE
+~~~
+
+<br>
+
+* using --replace-all option
+~~~
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --replace-all
+
+output:
+https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO&card=HELLO&charge=HELLO
+https://example.com/path1/?param1=BYE&param2=BYE&user=BYE&id=BYE&card=BYE&charge=BYE
+~~~
+
+<br>
+
+* using --replace-all option with chunk
+~~~
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --replace-all -c 4
+
+output:
+https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO
+https://example.com/path1/?param1=HELLO&param2=HELLO&card=HELLO&charge=HELLO
+https://example.com/path1/?param1=BYE&param2=BYE&user=BYE&id=BYE
+https://example.com/path1/?param1=BYE&param2=BYE&card=BYE&charge=BYE
+~~~
+
+<br>
+
+* using --replace-alt option
+~~~
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt.txt --replace-alt
+
+output:
+https://example.com/path1/?param1=HELLO&param2=value2
+https://example.com/path1/?param1=value1&param2=HELLO
+https://example.com/path1/?param1=BYE&param2=value2
+https://example.com/path1/?param1=value1&param2=BYE
+~~~
+
+
+<br>
+
+* using --suffix-all option
+~~~
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt.txt --suffix-all
+
+output:
+https://example.com/path1/?param1=value1HELLO&param2=value2HELLO
+https://example.com/path1/?param1=value1HELLOBYE&param2=value2HELLOBYE
+~~~
+
+<br>
+
+* using --suffix-alt option
+~~~
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt.txt --suffix-alt
+
+output:
+https://example.com/path1/?param1=value1HELLO&param2=value2
+https://example.com/path1/?param1=value1&param2=value2HELLO
+https://example.com/path1/?param1=value1BYE&param2=value2
+https://example.com/path1/?param1=value1&param2=value2BYE
+~~~
+
+<br>
+
+* using --all option
+~~~
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt.txt --all
+
+output:
+https://example.com/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO&card=HELLO&charge=HELLO
+https://example.com/path1/?param1=value1&param2=value2&user=BYE&id=BYE&card=BYE&charge=BYE
+https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO&card=HELLO&charge=HELLO
+https://example.com/path1/?param1=BYE&param2=BYE&user=BYE&id=BYE&card=BYE&charge=BYE
+https://example.com/path1/?param1=HELLO&param2=value2
+https://example.com/path1/?param1=value1&param2=HELLO
+https://example.com/path1/?param1=BYE&param2=value2
+https://example.com/path1/?param1=value1&param2=BYE
+https://example.com/path1/?param1=value1HELLO&param2=value2HELLO
+https://example.com/path1/?param1=value1HELLOBYE&param2=value2HELLOBYE
+https://example.com/path1/?param1=value1HELLO&param2=value2
+https://example.com/path1/?param1=value1&param2=value2HELLO
+https://example.com/path1/?param1=value1BYE&param2=value2
+https://example.com/path1/?param1=value1&param2=value2BYE
+~~~
+
+<br>
+
+* using --all option with chunk
+~~~
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt.txt --all -c 4
+
+output:
+https://example.com/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO
+https://example.com/path1/?param1=value1&param2=value2&card=HELLO&charge=HELLO
+https://example.com/path1/?param1=value1&param2=value2&user=BYE&id=BYE
+https://example.com/path1/?param1=value1&param2=value2&card=BYE&charge=BYE
+https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO
+https://example.com/path1/?param1=HELLO&param2=HELLO&card=HELLO&charge=HELLO
+https://example.com/path1/?param1=BYE&param2=BYE&user=BYE&id=BYE
+https://example.com/path1/?param1=BYE&param2=BYE&card=BYE&charge=BYE
+https://example.com/path1/?param1=HELLO&param2=value2
+https://example.com/path1/?param1=value1&param2=HELLO
+https://example.com/path1/?param1=BYE&param2=value2
+https://example.com/path1/?param1=value1&param2=BYE
+https://example.com/path1/?param1=value1HELLO&param2=value2HELLO
+https://example.com/path1/?param1=value1HELLOBYE&param2=value2HELLOBYE
+https://example.com/path1/?param1=value1HELLO&param2=value2
+https://example.com/path1/?param1=value1&param2=value2HELLO
+https://example.com/path1/?param1=value1BYE&param2=value2
+https://example.com/path1/?param1=value1&param2=value2BYE
+~~~

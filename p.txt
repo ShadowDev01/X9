@@ -1,4 +1,0 @@
-user
-id
-card
-charge
