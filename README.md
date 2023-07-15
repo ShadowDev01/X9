@@ -118,7 +118,7 @@ https://example.com/path1/?param1=BYE&param2=BYE&card=BYE&charge=BYE
 
 * using --replace-alt option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt.txt --replace-alt
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt --replace-alt
 
 output:
 https://example.com/path1/?param1=HELLO&param2=value2
@@ -132,7 +132,7 @@ https://example.com/path1/?param1=value1&param2=BYE
 
 * using --suffix-all option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt.txt --suffix-all
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt --suffix-all
 
 output:
 https://example.com/path1/?param1=value1HELLO&param2=value2HELLO
@@ -143,7 +143,7 @@ https://example.com/path1/?param1=value1HELLOBYE&param2=value2HELLOBYE
 
 * using --suffix-alt option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt.txt --suffix-alt
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt --suffix-alt
 
 output:
 https://example.com/path1/?param1=value1HELLO&param2=value2
@@ -156,7 +156,7 @@ https://example.com/path1/?param1=value1&param2=value2BYE
 
 * using --all option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt.txt --all
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --all
 
 output:
 https://example.com/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO&card=HELLO&charge=HELLO
@@ -179,7 +179,7 @@ https://example.com/path1/?param1=value1&param2=value2BYE
 
 * using --all option with chunk
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt.txt --all -c 4
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --all -c 4
 
 output:
 https://example.com/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO
