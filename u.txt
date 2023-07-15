@@ -1,0 +1,2 @@
+https://memoryleaks.ir/path1/?param1=value1&param2=value2
+https://memoryleaks.ir/pathx/file.php?param3=value3&param4=value4
