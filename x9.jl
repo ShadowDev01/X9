@@ -111,6 +111,7 @@ end
 function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vector{String}, chunk::Int)
     for url in urls
         for value in Values
+            url1 = url
             custom = custom_parmeters([value], Keys)
             kv = Dict{String,String}()
             params = parameters(url)
@@ -119,7 +120,7 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::
                 get!(kv, param, value)
             end
             for (k, v) in sort([(k, v) for (k, v) in pairs(kv)], by=item -> length(item[1]), rev=true)
-                url = replace(url, k => v)
+                url1 = replace(url1, k => v)
             end
             CHUNK(url, custom, params_count, chunk)
         end
