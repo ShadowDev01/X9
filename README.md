@@ -48,16 +48,30 @@
 
 # Examples
 
-url = 
+  url = https://memoryleaks.ir/path1/?param1=value1&param2=value2
+
+  parmas.txt:   
+    user
+    id
+    card
+    charge
+
+  values.txt:   
+    HELLO
+    BYE
 
 * for custom threads, should pass -t [int] to julia
 ~~~
-> julia -t 2 BackupX.jl [switches]
+> julia -t 2 x9.jl [switches]
 ~~~
-* generate wordlist by your custom input
+
 ~~~
-> julia BackupX.jl -U [file] -p [file] -w [file] -e [file] -n [min-max] -y [min-max] -m [min-max] -d [min-max]
+> julia x9.jl -u "https://memoryleaks.ir/path1/?param1=value1&param2=value2" -p p.txt -v v.txt.txt --ignore
+
+* https://memoryleaks.ir/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO&card=HELLO&charge=HELLO
+* https://memoryleaks.ir/path1/?param1=value1&param2=value2&user=BYE&id=BYE&card=BYE&charge=BYE
 ~~~
+
 * for example generate wordlist by single url with this pattern: $subdomain.$domain.$ext$num.$y-$m-$d
 ~~~
 > julia BackupX.jl -u https://sub1-sub2.sub3.domain.tld -p pattern.json  -w wordlist.txt -e extensions.txt -n 1-100 -y 2021-2023 -m 1-12 -d 1-30
