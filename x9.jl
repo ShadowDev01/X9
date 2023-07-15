@@ -122,7 +122,7 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::
             for (k, v) in sort([(k, v) for (k, v) in pairs(kv)], by=item -> length(item[1]), rev=true)
                 url1 = replace(url1, k => v)
             end
-            CHUNK(url, custom, params_count, chunk)
+            CHUNK(url1, custom, params_count, chunk)
         end
     end
 end
