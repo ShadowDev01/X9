@@ -129,7 +129,7 @@ end
 
 function replace_alternative(; urls::Vector{String}, Values::Vector{String})
     for url in urls
-        params = sort(parameters(url), by=length, rev=true)
+        params = parameters(url)
         for (param, value) in Iterators.product(params, Values)
             reg = startswith(param, r"\w") ? Regex("\\b$param\\b") : Regex(param)
             push!(res, replace(url, reg => value))
