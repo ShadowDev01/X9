@@ -82,12 +82,12 @@ function custom_parmeters(Values::Vector{String}, Keys::Vector{String})
     return unique(ress)
 end
 
-function CHUNK(url::String, custom_params::Vector{String}, params_count, chunk::Int)
+function CHUNK(url::String, custom_params::Vector{String}, params_count::Int32, chunk::Int)
     if chunk < params_count
         @warn "chunk cant be less than default parameters count \ndefault parameters = $params_count\nchunk = $chunk"
         exit(0)
     end
-    k = abs(params_count - chunk)
+    k::Int32 = abs(params_count - chunk)
     if k >= 1 && !isempty(custom_params)
         for item in Iterators.partition(custom_params, k)
             push!(res, url * join(item))
@@ -101,7 +101,7 @@ function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vecto
     for url in urls
         for value in Values
             params = parameters(url)
-            params_count = length(params)
+            params_count::Int32 = length(params)
             custom = custom_parmeters([value], Keys)
             CHUNK(url, custom, params_count, chunk)
         end
@@ -115,7 +115,7 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::
             custom = custom_parmeters([value], Keys)
             kv = Dict{String,String}()
             params = parameters(url)
-            params_count = length(params)
+            params_count::Int32 = length(params)
             for param in params
                 get!(kv, param, value)
             end
@@ -129,9 +129,10 @@ end
 
 function replace_alternative(; urls::Vector{String}, Values::Vector{String})
     for url in urls
-        params = parameters(url)
+        params = sort(parameters(url), by=length, rev=true)
         for (param, value) in Iterators.product(params, Values)
-            push!(res, replace(url, param => value))
+            reg = startswith(param, r"\w") ? Regex("\\b$param\\b") : Regex(param)
+            push!(res, replace(url, reg => value))
         end
     end
 end
@@ -141,7 +142,8 @@ function suffix_all(; urls::Vector{String}, Values::Vector{String})
         for value in Values
             params = parameters(url)
             for (p, v) in Iterators.product(params, [value])
-                url = replace(url, p => join([p, v]))
+                reg = startswith(p, r"\w") ? Regex("\\b$p\\b") : Regex(p)
+                url = replace(url, reg => join([p, v]))
             end
             push!(res, url)
         end
@@ -152,7 +154,8 @@ function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
     for url in urls
         params = parameters(url)
         for (param, value) in Iterators.product(params, Values)
-            push!(res, replace(url, param => join([param, value])))
+            reg = startswith(param, r"\w") ? Regex("\\b$param\\b") : Regex(param)
+            push!(res, replace(url, reg => join([param, value])))
         end
     end
 end
