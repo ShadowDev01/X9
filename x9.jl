@@ -99,9 +99,9 @@ end
 
 function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vector{String}, chunk::Int)
     for url in urls
+        params = parameters(url)
+        params_count::Int32 = length(params)
         for value in Values
-            params = parameters(url)
-            params_count::Int32 = length(params)
             custom = custom_parmeters([value], Keys)
             CHUNK(url, custom, params_count, chunk)
         end
@@ -110,12 +110,12 @@ end
 
 function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vector{String}, chunk::Int)
     for url in urls
+        params = parameters(url)
+        params_count::Int32 = length(params)
         for value in Values
             url1 = url
             custom = custom_parmeters([value], Keys)
             kv = Dict{String,String}()
-            params = parameters(url)
-            params_count::Int32 = length(params)
             for param in params
                 get!(kv, param, value)
             end
@@ -139,13 +139,14 @@ end
 
 function suffix_all(; urls::Vector{String}, Values::Vector{String})
     for url in urls
+        params = parameters(url)
         for value in Values
-            params = parameters(url)
+            url1::String = url
             for (p, v) in Iterators.product(params, [value])
                 reg = startswith(p, r"\w") ? Regex("\\b$p\\b") : Regex(p)
-                url = replace(url, reg => join([p, v]))
+                url1 = replace(url1, reg => join([p, v]))
             end
-            push!(res, url)
+            push!(res, url1)
         end
     end
 end

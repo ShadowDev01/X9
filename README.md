@@ -50,7 +50,7 @@
 ```
   url = https://example.com/path1/?param1=value1&param2=value2
 
-  parmas.txt ->   user id card charge
+  parmas.txt ->   user id login card
 
   values.txt ->   HELLO BYE
 ```
@@ -69,8 +69,8 @@
 > julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --ignore
 
 output:
-https://example.com/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO&card=HELLO&charge=HELLO
-https://example.com/path1/?param1=value1&param2=value2&user=BYE&id=BYE&card=BYE&charge=BYE
+https://example.com/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO&login=HELLO&card=HELLO
+https://example.com/path1/?param1=value1&param2=value2&user=BYE&id=BYE&login=BYE&card=BYE
 ~~~
 
 <br>
@@ -82,12 +82,12 @@ https://example.com/path1/?param1=value1&param2=value2&user=BYE&id=BYE&card=BYE&
 output:
 https://example.com/path1/?param1=value1&param2=value2&user=HELLO
 https://example.com/path1/?param1=value1&param2=value2&id=HELLO
+https://example.com/path1/?param1=value1&param2=value2&login=HELLO
 https://example.com/path1/?param1=value1&param2=value2&card=HELLO
-https://example.com/path1/?param1=value1&param2=value2&charge=HELLO
 https://example.com/path1/?param1=value1&param2=value2&user=BYE
 https://example.com/path1/?param1=value1&param2=value2&id=BYE
+https://example.com/path1/?param1=value1&param2=value2&login=BYE
 https://example.com/path1/?param1=value1&param2=value2&card=BYE
-https://example.com/path1/?param1=value1&param2=value2&charge=BYE
 ~~~
 
 <br>
@@ -97,8 +97,8 @@ https://example.com/path1/?param1=value1&param2=value2&charge=BYE
 > julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --replace-all
 
 output:
-https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO&card=HELLO&charge=HELLO
-https://example.com/path1/?param1=BYE&param2=BYE&user=BYE&id=BYE&card=BYE&charge=BYE
+https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO&login=HELLO&card=HELLO
+https://example.com/path1/?param1=BYE&param2=BYE&user=BYE&id=BYE&login=BYE&card=BYE
 ~~~
 
 <br>
@@ -109,9 +109,9 @@ https://example.com/path1/?param1=BYE&param2=BYE&user=BYE&id=BYE&card=BYE&charge
 
 output:
 https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO
-https://example.com/path1/?param1=HELLO&param2=HELLO&card=HELLO&charge=HELLO
+https://example.com/path1/?param1=HELLO&param2=HELLO&login=HELLO&card=HELLO
 https://example.com/path1/?param1=BYE&param2=BYE&user=BYE&id=BYE
-https://example.com/path1/?param1=BYE&param2=BYE&card=BYE&charge=BYE
+https://example.com/path1/?param1=BYE&param2=BYE&login=BYE&card=BYE
 ~~~
 
 <br>
@@ -136,7 +136,7 @@ https://example.com/path1/?param1=value1&param2=BYE
 
 output:
 https://example.com/path1/?param1=value1HELLO&param2=value2HELLO
-https://example.com/path1/?param1=value1HELLOBYE&param2=value2HELLOBYE
+https://example.com/path1/?param1=value1BYE&param2=value2BYE
 ~~~
 
 <br>
@@ -159,16 +159,16 @@ https://example.com/path1/?param1=value1&param2=value2BYE
 > julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --all
 
 output:
-https://example.com/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO&card=HELLO&charge=HELLO
-https://example.com/path1/?param1=value1&param2=value2&user=BYE&id=BYE&card=BYE&charge=BYE
-https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO&card=HELLO&charge=HELLO
-https://example.com/path1/?param1=BYE&param2=BYE&user=BYE&id=BYE&card=BYE&charge=BYE
+https://example.com/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO&login=HELLO&card=HELLO
+https://example.com/path1/?param1=value1&param2=value2&user=BYE&id=BYE&login=BYE&card=BYE
+https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO&login=HELLO&card=HELLO
+https://example.com/path1/?param1=BYE&param2=BYE&user=BYE&id=BYE&login=BYE&card=BYE
 https://example.com/path1/?param1=HELLO&param2=value2
 https://example.com/path1/?param1=value1&param2=HELLO
 https://example.com/path1/?param1=BYE&param2=value2
 https://example.com/path1/?param1=value1&param2=BYE
 https://example.com/path1/?param1=value1HELLO&param2=value2HELLO
-https://example.com/path1/?param1=value1HELLOBYE&param2=value2HELLOBYE
+https://example.com/path1/?param1=value1BYE&param2=value2BYE
 https://example.com/path1/?param1=value1HELLO&param2=value2
 https://example.com/path1/?param1=value1&param2=value2HELLO
 https://example.com/path1/?param1=value1BYE&param2=value2
@@ -183,19 +183,19 @@ https://example.com/path1/?param1=value1&param2=value2BYE
 
 output:
 https://example.com/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO
-https://example.com/path1/?param1=value1&param2=value2&card=HELLO&charge=HELLO
+https://example.com/path1/?param1=value1&param2=value2&login=HELLO&card=HELLO
 https://example.com/path1/?param1=value1&param2=value2&user=BYE&id=BYE
-https://example.com/path1/?param1=value1&param2=value2&card=BYE&charge=BYE
+https://example.com/path1/?param1=value1&param2=value2&login=BYE&card=BYE
 https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO
-https://example.com/path1/?param1=HELLO&param2=HELLO&card=HELLO&charge=HELLO
+https://example.com/path1/?param1=HELLO&param2=HELLO&login=HELLO&card=HELLO
 https://example.com/path1/?param1=BYE&param2=BYE&user=BYE&id=BYE
-https://example.com/path1/?param1=BYE&param2=BYE&card=BYE&charge=BYE
+https://example.com/path1/?param1=BYE&param2=BYE&login=BYE&card=BYE
 https://example.com/path1/?param1=HELLO&param2=value2
 https://example.com/path1/?param1=value1&param2=HELLO
 https://example.com/path1/?param1=BYE&param2=value2
 https://example.com/path1/?param1=value1&param2=BYE
 https://example.com/path1/?param1=value1HELLO&param2=value2HELLO
-https://example.com/path1/?param1=value1HELLOBYE&param2=value2HELLOBYE
+https://example.com/path1/?param1=value1BYE&param2=value2BYE
 https://example.com/path1/?param1=value1HELLO&param2=value2
 https://example.com/path1/?param1=value1&param2=value2HELLO
 https://example.com/path1/?param1=value1BYE&param2=value2
