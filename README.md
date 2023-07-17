@@ -21,8 +21,8 @@
 
 * 1. git clone https://github.com/mrmeeseeks01/X9.git
 * 2. cd X9/
-* 3. docker build -t X9 .
-* 4. docker run -it X9
+* 3. docker build -t x9 .
+* 4. docker run -it x9
 * 5. press ; to enabled shell mode
 * 6. julia x9.jl -h
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
