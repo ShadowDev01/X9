@@ -67,17 +67,15 @@ end
 res = String[]
 
 function parameters(url::String)
-    reg = r"[\?,\&,\;][\w\-]+[\=,\&,\;]?([\w,\-,\%,\.]+)?"
+    reg = r"[\?,\&,\;][\w\-]+[\=,\&,\;]?([\w,\-,\%,\.]+)?"   # extract the value of default parameters in url
     return [i.captures[1] for i in eachmatch(reg, url)]
 end
 
 function custom_parmeters(Values::Vector{String}, Keys::Vector{String})
-    keys = filter(!isempty, Keys)
+    Keys = filter(!isempty, Keys)
     ress = String[]
-    for (k, v) in Iterators.product(Keys, Values)
-        if !isempty(k)
-            push!(ress, "&$k=$v")
-        end
+    for (k, v) in Iterators.product(Keys, Values)   # substitution of parameters and values given by the user then save in &parameter=value format
+        push!(ress, "&$k=$v")
     end
     return unique(ress)
 end
@@ -87,9 +85,9 @@ function CHUNK(url::String, custom_params::Vector{String}, params_count::Int32, 
         @warn "chunk cant be less than default parameters count \ndefault parameters = $params_count\nchunk = $chunk"
         exit(0)
     end
-    k::Int32 = abs(params_count - chunk)
+    k::Int32 = abs(params_count - chunk)   # makes sure that the chunk value in each URL is exactly the user input value: default parameters + input parameters = chunk
     if k >= 1 && !isempty(custom_params)
-        for item in Iterators.partition(custom_params, k)
+        for item in Iterators.partition(custom_params, k)   # Breaks the input parameters into the given number to make sure chunk be correct
             push!(res, url * join(item))
         end
     else
@@ -98,6 +96,7 @@ function CHUNK(url::String, custom_params::Vector{String}, params_count::Int32, 
 end
 
 function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vector{String}, chunk::Int)
+    Values = filter(!isempty, Values)
     for url in urls
         params = parameters(url)
         params_count::Int32 = length(params)
@@ -109,18 +108,20 @@ function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vecto
 end
 
 function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vector{String}, chunk::Int)
+    Values = filter(!isempty, Values)
     for url in urls
         params = parameters(url)
         params_count::Int32 = length(params)
         for value in Values
             url1 = url
             custom = custom_parmeters([value], Keys)
-            kv = Dict{String,String}()
+            kv = Dict{String,String}()   # use a custom dictionary to save parameters with new values to replace in url
             for param in params
                 get!(kv, param, value)
             end
-            for (k, v) in sort([(k, v) for (k, v) in pairs(kv)], by=item -> length(item[1]), rev=true)
-                url1 = replace(url1, k => v)
+            for (k, v) in pairs(kv)
+                reg = startswith(k, r"\w") ? Regex("\\b$k\\b") : Regex(k)
+                url1 = replace(url1, reg => v)
             end
             CHUNK(url1, custom, params_count, chunk)
         end
@@ -128,16 +129,18 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::
 end
 
 function replace_alternative(; urls::Vector{String}, Values::Vector{String})
+    Values = filter(!isempty, Values)
     for url in urls
         params = parameters(url)
         for (param, value) in Iterators.product(params, Values)
-            reg = startswith(param, r"\w") ? Regex("\\b$param\\b") : Regex(param)
+            reg = startswith(param, r"\w") ? Regex("\\b$param\\b") : Regex(param)   # use regex to make sure that values replace correctly
             push!(res, replace(url, reg => value))
         end
     end
 end
 
 function suffix_all(; urls::Vector{String}, Values::Vector{String})
+    Values = filter(!isempty, Values)
     for url in urls
         params = parameters(url)
         for value in Values
@@ -152,6 +155,7 @@ function suffix_all(; urls::Vector{String}, Values::Vector{String})
 end
 
 function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
+    Values = filter(!isempty, Values)
     for url in urls
         params = parameters(url)
         for (param, value) in Iterators.product(params, Values)
@@ -170,7 +174,7 @@ end
 function main()
     arguments = ARGUMENTS()
 
-    if !isnothing(arguments["url"])
+    if !isnothing(arguments["url"])   # in order not to interfere with the switches -u / -U
         url = [arguments["url"]]
     elseif !isnothing(arguments["urls"])
         url = readlines(arguments["urls"])
@@ -205,7 +209,7 @@ function main()
         Values=readlines(arguments["values"])
     )
 
-    isnothing(arguments["output"]) ? print(join(unique(res), "\n")) : Write(arguments["output"], "w+", join(unique(res), "\n"))
+    isnothing(arguments["output"]) ? print(join(unique(res), "\n")) : Write(arguments["output"], "w+", join(unique(res), "\n"))   # if was not given -o, then print in terminal
 end
 
 main()
