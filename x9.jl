@@ -97,11 +97,11 @@ end
 
 function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vector{String}, chunk::Int)
     Values = filter(!isempty, Values)
-    for url in urls
-        params = parameters(url)
+    Threads.@threads for url in urls
+        params::Vector{String} = parameters(url)
         params_count::Int32 = length(params)
         for value in Values
-            custom = custom_parmeters([value], Keys)
+            custom::Vector{String} = custom_parmeters([value], Keys)
             CHUNK(url, custom, params_count, chunk)
         end
     end
@@ -109,18 +109,18 @@ end
 
 function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vector{String}, chunk::Int)
     Values = filter(!isempty, Values)
-    for url in urls
-        params = parameters(url)
+    Threads.@threads for url in urls
+        params::Vector{String} = parameters(url)
         params_count::Int32 = length(params)
         for value in Values
-            url1 = url
-            custom = custom_parmeters([value], Keys)
+            url1::String = url
+            custom::Vector{String} = custom_parmeters([value], Keys)
             kv = Dict{String,String}()   # use a custom dictionary to save parameters with new values to replace in url
             for param in params
                 get!(kv, param, value)
             end
             for (k, v) in pairs(kv)
-                reg = startswith(k, r"\w") ? Regex("\\b$k\\b") : Regex(k)
+                reg::Regex = startswith(k, r"\w") ? Regex("\\b$k\\b") : Regex(k)
                 url1 = replace(url1, reg => v)
             end
             CHUNK(url1, custom, params_count, chunk)
@@ -130,10 +130,10 @@ end
 
 function replace_alternative(; urls::Vector{String}, Values::Vector{String})
     Values = filter(!isempty, Values)
-    for url in urls
-        params = parameters(url)
+    Threads.@threads for url in urls
+        params::Vector{String} = parameters(url)
         for (param, value) in Iterators.product(params, Values)
-            reg = startswith(param, r"\w") ? Regex("\\b$param\\b") : Regex(param)   # use regex to make sure that values replace correctly
+            reg::Regex = startswith(param, r"\w") ? Regex("\\b$param\\b") : Regex(param)   # use regex to make sure that values replace correctly
             push!(res, replace(url, reg => value))
         end
     end
@@ -141,12 +141,12 @@ end
 
 function suffix_all(; urls::Vector{String}, Values::Vector{String})
     Values = filter(!isempty, Values)
-    for url in urls
-        params = parameters(url)
+    Threads.@threads for url in urls
+        params::Vector{String} = parameters(url)
         for value in Values
             url1::String = url
             for (p, v) in Iterators.product(params, [value])
-                reg = startswith(p, r"\w") ? Regex("\\b$p\\b") : Regex(p)
+                reg::Regex = startswith(p, r"\w") ? Regex("\\b$p\\b") : Regex(p)
                 url1 = replace(url1, reg => join([p, v]))
             end
             push!(res, url1)
@@ -156,10 +156,10 @@ end
 
 function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
     Values = filter(!isempty, Values)
-    for url in urls
-        params = parameters(url)
+    Threads.@threads for url in urls
+        params::Vector{String} = parameters(url)
         for (param, value) in Iterators.product(params, Values)
-            reg = startswith(param, r"\w") ? Regex("\\b$param\\b") : Regex(param)
+            reg::Regex = startswith(param, r"\w") ? Regex("\\b$param\\b") : Regex(param)
             push!(res, replace(url, reg => join([param, value])))
         end
     end
