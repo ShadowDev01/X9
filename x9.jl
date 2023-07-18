@@ -71,6 +71,11 @@ function parameters(url::String)
     return [i.captures[1] for i in eachmatch(reg, "?$url")]
 end
 
+function chunks_count(url::String)
+    reg = r"[\?\&\;]([\w\-\~\+]+)"
+    return length(collect(eachmatch(reg, url)))
+end
+
 function custom_parmeters(Values::Vector{String}, Keys::Vector{String})
     Keys = filter(!isempty, Keys)
     ress = String[]
@@ -100,7 +105,7 @@ function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vecto
     Threads.@threads for url in urls
         url1::String, url2::String = split(url, "?", limit=2)
         params = parameters(url2)
-        params_count::Int32 = length(params)
+        params_count::Int32 = chunks_count(url2)
         for value in Values
             custom::Vector{String} = custom_parmeters([value], Keys)
             CHUNK(url, custom, params_count, chunk)
@@ -113,7 +118,7 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::
     Threads.@threads for url in urls
         url1::String, url2::String = split(url, "?", limit=2)
         params = parameters(url2)
-        params_count::Int32 = length(params)
+        params_count::Int32 = chunks_count(url2)
         for value in Values
             url3 = url2
             custom::Vector{String} = custom_parmeters([value], Keys)
