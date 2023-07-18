@@ -117,11 +117,12 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::
         for value in Values
             url3 = url2
             custom::Vector{String} = custom_parmeters([value], Keys)
-            kv = Dict{String, String}()   # use a custom dictionary to save parameters with new values to replace in url
+            kv = Dict{String,String}()   # use a custom dictionary to save parameters with new values to replace in url
             for param in filter(!isnothing, params)
                 get!(kv, param, value)
             end
-            for (k, v) in pairs(kv)
+            kv = sort([(k, v) for (k, v) in pairs(kv)], by=item -> length(item[1]), rev=true)
+            for (k, v) in kv
                 reg::Regex = startswith(k, r"\w") ? Regex("\\b$k\\b") : Regex(k)
                 url3 = replace(url3, reg => v)
             end
@@ -136,8 +137,8 @@ function replace_alternative(; urls::Vector{String}, Values::Vector{String})
         url1::String, url2::String = split(url, "?", limit=2)
         params = filter(!isnothing, parameters(url2))
         for (param, value) in Iterators.product(params, Values)
-            reg::Regex = startswith(param, r"\w") ? Regex("\\b$param\\b") : Regex(param)   # use regex to make sure that values replace correctly
-            push!(res, join([url1, "?", replace(url2, reg => value)]))
+            reg::Regex = startswith(param, r"\w") ? Regex("\\=\\b$param\\b") : Regex("\\=$param")   # use regex to make sure that values replace correctly
+            push!(res, join([url1, "?", replace(url2, reg => join(["=", value]))]))
         end
     end
 end
@@ -146,12 +147,12 @@ function suffix_all(; urls::Vector{String}, Values::Vector{String})
     Values = filter(!isempty, Values)
     Threads.@threads for url in urls
         url1::String, url2::String = split(url, "?", limit=2)
-        params = filter(!isnothing, parameters(url2))
+        params = sort(filter(!isnothing, parameters(url2)), rev=true)
         for value in Values
             url3 = url2
             for (p, v) in Iterators.product(params, [value])
-                reg::Regex = startswith(p, r"\w") ? Regex("\\b$p\\b") : Regex(p)
-                url3 = replace(url3, reg => join([p, v]))
+                reg::Regex = startswith(p, r"\w") ? Regex("\\=\\b$p\\b") : Regex("\\=$p")
+                url3 = replace(url3, reg => join(["=", p, v]))
             end
             push!(res, join([url1, "?", url3]))
         end
@@ -164,8 +165,8 @@ function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
         url1::String, url2::String = split(url, "?", limit=2)
         params = filter(!isnothing, parameters(url2))
         for (param, value) in Iterators.product(params, Values)
-            reg::Regex = startswith(param, r"\w") ? Regex("\\b$param\\b") : Regex(param)
-            push!(res, join([url1, "?", replace(url2, reg => join([param, value]))]))
+            reg::Regex = startswith(param, r"\w") ? Regex("\\=\\b$param\\b") : Regex("\\=$param")
+            push!(res, join([url1, "?", replace(url2, reg => join(["=", param, value]))]))
         end
     end
 end
