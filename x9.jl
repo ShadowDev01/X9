@@ -67,8 +67,8 @@ end
 res = String[]
 
 function parameters(url::String)
-    reg = r"[\?,\&,\;][\w\-]+[\=,\&,\;]?([\w,\-,\%,\.]+)?"   # extract the value of default parameters in url
-    return [i.captures[1] for i in eachmatch(reg, url)]
+    reg = r"[\?\&\;][\w\-\~\+\%]+[\=\&]?([\w\-\%\.\:\~\,\/]+)?"   # extract the value of default parameters in url
+    return [i.captures[1] for i in eachmatch(reg, "?$url")]
 end
 
 function custom_parmeters(Values::Vector{String}, Keys::Vector{String})
@@ -98,7 +98,8 @@ end
 function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vector{String}, chunk::Int)
     Values = filter(!isempty, Values)
     Threads.@threads for url in urls
-        params::Vector{String} = parameters(url)
+        url1::String, url2::String = split(url, "?", limit=2)
+        params = parameters(url2)
         params_count::Int32 = length(params)
         for value in Values
             custom::Vector{String} = custom_parmeters([value], Keys)
@@ -107,23 +108,25 @@ function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vecto
     end
 end
 
+
 function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vector{String}, chunk::Int)
     Values = filter(!isempty, Values)
     Threads.@threads for url in urls
-        params::Vector{String} = parameters(url)
+        url1::String, url2::String = split(url, "?", limit=2)
+        params = parameters(url2)
         params_count::Int32 = length(params)
         for value in Values
-            url1::String = url
+            url3 = url2
             custom::Vector{String} = custom_parmeters([value], Keys)
-            kv = Dict{String,String}()   # use a custom dictionary to save parameters with new values to replace in url
-            for param in params
+            kv = Dict{String, String}()   # use a custom dictionary to save parameters with new values to replace in url
+            for param in filter(!isnothing, params)
                 get!(kv, param, value)
             end
             for (k, v) in pairs(kv)
                 reg::Regex = startswith(k, r"\w") ? Regex("\\b$k\\b") : Regex(k)
-                url1 = replace(url1, reg => v)
+                url3 = replace(url3, reg => v)
             end
-            CHUNK(url1, custom, params_count, chunk)
+            CHUNK(join([url1, "?", url3]), custom, params_count, chunk)
         end
     end
 end
@@ -131,10 +134,11 @@ end
 function replace_alternative(; urls::Vector{String}, Values::Vector{String})
     Values = filter(!isempty, Values)
     Threads.@threads for url in urls
-        params::Vector{String} = parameters(url)
+        url1::String, url2::String = split(url, "?", limit=2)
+        params = filter(!isnothing, parameters(url2))
         for (param, value) in Iterators.product(params, Values)
             reg::Regex = startswith(param, r"\w") ? Regex("\\b$param\\b") : Regex(param)   # use regex to make sure that values replace correctly
-            push!(res, replace(url, reg => value))
+            push!(res, join([url1, "?", replace(url2, reg => value)]))
         end
     end
 end
@@ -142,14 +146,15 @@ end
 function suffix_all(; urls::Vector{String}, Values::Vector{String})
     Values = filter(!isempty, Values)
     Threads.@threads for url in urls
-        params::Vector{String} = parameters(url)
+        url1::String, url2::String = split(url, "?", limit=2)
+        params = filter(!isnothing, parameters(url2))
         for value in Values
-            url1::String = url
+            url3 = url2
             for (p, v) in Iterators.product(params, [value])
                 reg::Regex = startswith(p, r"\w") ? Regex("\\b$p\\b") : Regex(p)
-                url1 = replace(url1, reg => join([p, v]))
+                url3 = replace(url3, reg => join([p, v]))
             end
-            push!(res, url1)
+            push!(res, join([url1, "?", url3]))
         end
     end
 end
@@ -157,10 +162,11 @@ end
 function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
     Values = filter(!isempty, Values)
     Threads.@threads for url in urls
-        params::Vector{String} = parameters(url)
+        url1::String, url2::String = split(url, "?", limit=2)
+        params = filter(!isnothing, parameters(url2))
         for (param, value) in Iterators.product(params, Values)
             reg::Regex = startswith(param, r"\w") ? Regex("\\b$param\\b") : Regex(param)
-            push!(res, replace(url, reg => join([param, value])))
+            push!(res, join([url1, "?", replace(url2, reg => join([param, value]))]))
         end
     end
 end
