@@ -67,7 +67,7 @@ end
 res = String[]
 
 function parameters(url::String)
-    reg = r"[\?\&\;][\w\-\~\+\%]+[\=\&]?([\w\-\%\.\:\~\,\/]+)?"   # extract the value of default parameters in url
+    reg = r"\=([\w\-\%\.\:\~\,\/]+)?"   # extract the value of default parameters in url
     return [i.captures[1] for i in eachmatch(reg, "?$url")]
 end
 
@@ -107,7 +107,6 @@ function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vecto
         end
     end
 end
-
 
 function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vector{String}, chunk::Int)
     Values = filter(!isempty, Values)
