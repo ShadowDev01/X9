@@ -67,7 +67,7 @@ end
 res = String[]
 
 function parameters(url::String)
-    reg = r"\=([\w\-\%\.\:\~\,\/]+)?"   # extract the value of default parameters in url
+    reg = r"\=([\w\-\%\.\:\~\,\"\'\<\>\=\(\)\`\{\}\$\+\/\;]+)?"   # extract the value of default parameters in url
     return [i.captures[1] for i in eachmatch(reg, "?$url")]
 end
 
