@@ -87,7 +87,7 @@ end
 
 function CHUNK(url::String, custom_params::Vector{String}, params_count::Int32, chunk::Int)
     if chunk < params_count
-        @warn "chunk cant be less than default parameters count \ndefault parameters = $params_count\nchunk = $chunk"
+        @warn "chunk cant be less than default parameters count \ndefault parameters = $params_count\ninput chunk = $chunk\nurl = $url"
         exit(0)
     end
     k::Int32 = abs(params_count - chunk)   # makes sure that the chunk value in each URL is exactly the user input value: default parameters + input parameters = chunk
