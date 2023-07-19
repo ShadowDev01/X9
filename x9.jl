@@ -104,10 +104,18 @@ function escape(st::AbstractString)
     replace(st, "(" => "\\(", ")" => "\\)", "[" => "\\[", "]" => "\\]", "{" => "\\{", "}" => "\\}")
 end
 
+function SPLIT(url::String)
+    url = split(url, "?", limit=2)
+    if length(url) > 1
+        return url
+    end
+    return [url..., ""]
+end
+
 function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vector{String}, chunk::Int)
     Values = filter(!isempty, Values)
     Threads.@threads for url in urls
-        url1::String, url2::String = split(url, "?", limit=2)
+        url1::String, url2::String = SPLIT(url)
         params = parameters(url2)
         params_count::Int32 = chunks_count(url2)
         for value in Values
@@ -120,7 +128,7 @@ end
 function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vector{String}, chunk::Int)
     Values = filter(!isempty, Values)
     Threads.@threads for url in urls
-        url1::String, url2::String = split(url, "?", limit=2)
+        url1::String, url2::String = SPLIT(url)
         params = parameters(url2)
         params_count::Int32 = chunks_count(url2)
         for value in Values
@@ -143,7 +151,7 @@ end
 function replace_alternative(; urls::Vector{String}, Values::Vector{String})
     Values = filter(!isempty, Values)
     Threads.@threads for url in urls
-        url1::String, url2::String = split(url, "?", limit=2)
+        url1::String, url2::String = SPLIT(url)
         params = filter(!isnothing, parameters(url2))
         for (param, value) in Iterators.product(params, Values)
             reg::Regex = startswith(param, r"\w") ? Regex("\\=\\b$(escape(param))\\b") : Regex("\\=$param")   # use regex to make sure that values replace correctly
@@ -155,7 +163,7 @@ end
 function suffix_all(; urls::Vector{String}, Values::Vector{String})
     Values = filter(!isempty, Values)
     Threads.@threads for url in urls
-        url1::String, url2::String = split(url, "?", limit=2)
+        url1::String, url2::String = SPLIT(url)
         params = sort(filter(!isnothing, parameters(url2)), rev=true)
         for value in Values
             url3 = url2
@@ -171,7 +179,7 @@ end
 function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
     Values = filter(!isempty, Values)
     Threads.@threads for url in urls
-        url1::String, url2::String = split(url, "?", limit=2)
+        url1::String, url2::String = SPLIT(url)
         params = filter(!isnothing, parameters(url2))
         for (param, value) in Iterators.product(params, Values)
             reg::Regex = startswith(param, r"\w") ? Regex("\\=\\b$(escape(param))\\b") : Regex("\\=$param")
