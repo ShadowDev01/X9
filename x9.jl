@@ -61,7 +61,7 @@ function suffix_all(; urls::Vector{String}, Values::Vector{String})
                 reg::Regex = startswith(p, r"\w") ? Regex("\\=\\b$(escape(p))\\b") : Regex("\\=$p")
                 params = replace(params, reg => join(["=", p, v]))
             end
-            push!(res, join([Url._path, params, Url.fragment]))
+            !isempty(params) && push!(res, join([Url._path, params, Url.fragment]))
         end
     end
 end
