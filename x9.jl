@@ -100,6 +100,10 @@ function CHUNK(url::String, custom_params::Vector{String}, params_count::Int32, 
     end
 end
 
+function escape(st::AbstractString)
+    replace(st, "(" => "\\(", ")" => "\\)", "[" => "\\[", "]" => "\\]", "{" => "\\{", "}" => "\\}")
+end
+
 function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vector{String}, chunk::Int)
     Values = filter(!isempty, Values)
     Threads.@threads for url in urls
@@ -128,7 +132,7 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::
             end
             kv = sort([(k, v) for (k, v) in pairs(kv)], by=item -> length(item[1]), rev=true)
             for (k, v) in kv
-                reg::Regex = startswith(k, r"\w") ? Regex("\\b$k\\b") : Regex(k)
+                reg::Regex = startswith(k, r"\w") ? Regex("\\b$(escape(k))\\b") : Regex(k)
                 url3 = replace(url3, reg => v)
             end
             CHUNK(join([url1, "?", url3]), custom, params_count, chunk)
@@ -142,7 +146,7 @@ function replace_alternative(; urls::Vector{String}, Values::Vector{String})
         url1::String, url2::String = split(url, "?", limit=2)
         params = filter(!isnothing, parameters(url2))
         for (param, value) in Iterators.product(params, Values)
-            reg::Regex = startswith(param, r"\w") ? Regex("\\=\\b$param\\b") : Regex("\\=$param")   # use regex to make sure that values replace correctly
+            reg::Regex = startswith(param, r"\w") ? Regex("\\=\\b$(escape(param))\\b") : Regex("\\=$param")   # use regex to make sure that values replace correctly
             push!(res, join([url1, "?", replace(url2, reg => join(["=", value]))]))
         end
     end
@@ -156,7 +160,7 @@ function suffix_all(; urls::Vector{String}, Values::Vector{String})
         for value in Values
             url3 = url2
             for (p, v) in Iterators.product(params, [value])
-                reg::Regex = startswith(p, r"\w") ? Regex("\\=\\b$p\\b") : Regex("\\=$p")
+                reg::Regex = startswith(p, r"\w") ? Regex("\\=\\b$(escape(p))\\b") : Regex("\\=$p")
                 url3 = replace(url3, reg => join(["=", p, v]))
             end
             push!(res, join([url1, "?", url3]))
@@ -170,7 +174,7 @@ function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
         url1::String, url2::String = split(url, "?", limit=2)
         params = filter(!isnothing, parameters(url2))
         for (param, value) in Iterators.product(params, Values)
-            reg::Regex = startswith(param, r"\w") ? Regex("\\=\\b$param\\b") : Regex("\\=$param")
+            reg::Regex = startswith(param, r"\w") ? Regex("\\=\\b$(escape(param))\\b") : Regex("\\=$param")
             push!(res, join([url1, "?", replace(url2, reg => join(["=", param, value]))]))
         end
     end
