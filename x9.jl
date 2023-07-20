@@ -11,7 +11,7 @@ function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vecto
         Empty = isempty(Url.query)
         for value in Values
             custom::Vector{String} = custom_parmeters([value], Keys, Empty=Empty)
-            CHUNK(Url._query, custom, Url.parameters_count, chunk, Url.fragment)
+            CHUNK(Url._query, custom, Url.parameters_count, chunk, Tail=Url.fragment)
         end
     end
 end
@@ -34,7 +34,7 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::
                 reg::Regex = startswith(k, r"\w") ? Regex("\\b$(escape(k))\\b") : Regex(k)
                 params = replace(params, reg => v)
             end
-            CHUNK(Url._path, custom, Url.parameters_count, chunk, params, Url.fragment)
+            CHUNK(Url._path, custom, Url.parameters_count, chunk, edit_params=params, Tail=Url.fragment)
         end
     end
 end

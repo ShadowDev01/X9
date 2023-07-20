@@ -9,7 +9,7 @@ function custom_parmeters(Values::Vector{String}, Keys::Vector{String}; Empty::B
     return unique(ress)
 end
 
-function CHUNK(Front::String, custom_params::Vector{String}, params_count::Int32, chunk::Int, edit_params::String="", Tail::String="")
+function CHUNK(Front::String, custom_params::Vector{String}, params_count::Int32, chunk::Int; edit_params::String="", Tail::String="")
     if chunk < params_count
         @warn "chunk cant be less than default parameters count \ndefault parameters = $params_count\ninput chunk = $chunk\nurl = $url"
         exit(0)
