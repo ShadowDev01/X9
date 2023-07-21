@@ -8,9 +8,8 @@ function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vecto
     Keys = filter(!isempty, Keys)
     Threads.@threads for url in urls
         Url = URL(url)
-        Empty = isempty(Url.query)
         for value in Values
-            custom::Vector{String} = custom_parmeters([value], Keys, Empty=Empty, chunk=chunk)
+            custom::Vector{String} = custom_parmeters([value], Keys)
             CHUNK(Url, custom, chunk, edit_params=Url.query)
         end
     end
@@ -21,9 +20,8 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::
     Keys = filter(!isempty, Keys)
     Threads.@threads for url in urls
         Url = URL(url)
-        Empty = isempty(Url.query)
         for value in Values
-            custom::Vector{String} = custom_parmeters([value], Keys, Empty=Empty, chunk=chunk)
+            custom::Vector{String} = custom_parmeters([value], Keys)
             kv = Dict{String,String}()   # use a custom dictionary to save parameters with new values to replace in url
             for param in filter(!isnothing, Url.parameters_value)
                 get!(kv, param, value)
