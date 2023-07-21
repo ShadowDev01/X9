@@ -10,8 +10,8 @@ function ignore(; urls::Vector{String}, Keys::Vector{String}=[""], Values::Vecto
         Url = URL(url)
         Empty = isempty(Url.query)
         for value in Values
-            custom::Vector{String} = custom_parmeters([value], Keys, Empty=Empty)
-            CHUNK(Url._query, custom, Url.parameters_count, chunk, Tail=Url.fragment)
+            custom::Vector{String} = custom_parmeters([value], Keys, Empty=Empty, chunk=chunk)
+            CHUNK(Url, custom, chunk, edit_params=Url.query)
         end
     end
 end
@@ -23,7 +23,7 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::
         Url = URL(url)
         Empty = isempty(Url.query)
         for value in Values
-            custom::Vector{String} = custom_parmeters([value], Keys, Empty=Empty)
+            custom::Vector{String} = custom_parmeters([value], Keys, Empty=Empty, chunk=chunk)
             kv = Dict{String,String}()   # use a custom dictionary to save parameters with new values to replace in url
             for param in filter(!isnothing, Url.parameters_value)
                 get!(kv, param, value)
@@ -34,7 +34,7 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::
                 reg::Regex = startswith(k, r"\w") ? Regex("\\b$(escape(k))\\b") : Regex(k)
                 params = replace(params, reg => v)
             end
-            CHUNK(Url._path, custom, Url.parameters_count, chunk, edit_params=params, Tail=Url.fragment)
+            CHUNK(Url, custom, chunk, edit_params=params)
         end
     end
 end
