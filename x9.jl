@@ -29,7 +29,7 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}=[""], Values::
             kv = sort([(k, v) for (k, v) in pairs(kv)], by=item -> length(item[1]), rev=true)
             params::String = Url.query
             for (k, v) in kv
-                reg::Regex = startswith(k, r"\w") ? Regex("\\b$(escape(k))\\b") : Regex(k)
+                reg::Regex = isalphanum(k) ? Regex("\\b$(escape(k))\\b") : Regex(k)
                 params = replace(params, reg => v)
             end
             CHUNK(Url, custom, chunk, edit_params=params)
@@ -43,7 +43,7 @@ function replace_alternative(; urls::Vector{String}, Values::Vector{String})
         Url = URL(url)
         params = Url.query
         for (param, value) in Iterators.product(Url.parameters_value, Values)
-            reg::Regex = startswith(param, r"\w") ? Regex("\\=\\b$(escape(param))\\b") : Regex("\\=$param")   # use regex to make sure that values replace correctly
+            reg::Regex = isalphanum(param) ? Regex("\\=\\b$(escape(param))\\b") : Regex("\\=$param")   # use regex to make sure that values replace correctly
             push!(res, Url._path * replace(params, reg => "=$value") * Url.fragment)
         end
     end
@@ -56,7 +56,7 @@ function suffix_all(; urls::Vector{String}, Values::Vector{String})
         for value in Values
             params = Url.query
             for (p, v) in Iterators.product(Url.parameters_value, [value])
-                reg::Regex = startswith(p, r"\w") ? Regex("\\=\\b$(escape(p))\\b") : Regex("\\=$p")
+                reg::Regex = isalphanum(p) ? Regex("\\=\\b$(escape(p))\\b") : Regex("\\=$p")
                 params = replace(params, reg => join(["=", p, v]))
             end
             !isempty(params) && push!(res, join([Url._path, params, Url.fragment]))
@@ -70,7 +70,7 @@ function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
         Url = URL(url)
         params = Url.query
         for (param, value) in Iterators.product(Url.parameters_value, Values)
-            reg::Regex = startswith(param, r"\w") ? Regex("\\=\\b$(escape(param))\\b") : Regex("\\=$param")
+            reg::Regex = isalphanum(param) ? Regex("\\=\\b$(escape(param))\\b") : Regex("\\=$param")
             push!(res, join([Url._path, replace(params, reg => join(["=", param, value])), Url.fragment]))
         end
     end

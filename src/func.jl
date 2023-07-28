@@ -36,6 +36,8 @@ function escape(st::AbstractString)
     replace(st, "(" => "\\(", ")" => "\\)", "[" => "\\[", "]" => "\\]", "{" => "\\{", "}" => "\\}")
 end
 
+isalphanum(s::String) = startswith(s, r"\w") && endswith(s, r"\w")
+
 function Write(filename::String, mode::String, data::String)
     open(filename, mode) do file
         write(file, data)
