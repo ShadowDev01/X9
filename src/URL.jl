@@ -30,7 +30,7 @@ end
 
 function extract(host)
     tlds = Set()
-    for line in eachline("tlds.txt")
+    for line in eachline("src/tlds.txt")
         occursin(Regex("\\b$line\\b\\Z"), host) && push!(tlds, line)
     end
     tld = argmax(length, tlds)
