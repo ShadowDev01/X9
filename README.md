@@ -11,7 +11,7 @@
 # install julia: https://julialang.org/downloads/    or    snap install julia --classic
 # then run this commands in terminal:
 
-* 1. julia -e 'using Pkg; Pkg.add("ArgParse")'
+* 1. julia -e 'using Pkg; Pkg.add("JSON"); Pkg.add("ArgParse"); Pkg.add("OrderedCollections")'
 * 2. git clone https://github.com/mrmeeseeks01/X9.git
 * 3. cd X9/
 * 4. julia x9.jl -h
