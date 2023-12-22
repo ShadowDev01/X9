@@ -1,39 +1,25 @@
-res = String[]
-
-function custom_parmeters(Values::Vector{String}, Keys::Vector{String})
-    ress = String[]
-    for (k, v) in Iterators.product(Keys, Values)   # substitution of parameters and values given by the user then save in &parameter=value format
-        push!(ress, "&$k=$v")
-    end
-    return unique(ress)
-end
-
-function CHUNK(url::URL, custom_params::Vector{String}, chunk::Int; edit_params::String="")
-    if chunk < url.parameters_count
-        @warn "chunk cant be less than default parameters count \ndefault parameters = $(url.parameters_count)\ninput chunk = $chunk\nurl = $(url._fragment)"
+# Read File and Return Non Empty Lines 
+# If File Not Exist, Show Error and Exit
+function ReadNonEmptyLines(FilePath::String)
+    if isfile(FilePath)
+        filter(!isempty, readlines(FilePath))
+    else
+        @error "Not Such File or Directory: $FilePath"
         exit(0)
     end
-    edit_params = edit_params == "?" ? "" : edit_params
-    Empty = isempty(edit_params) ? true : false
-    k::Int32 = abs(url.parameters_count - chunk)   # makes sure that the chunk value in each URL is exactly the user input value: default parameters + input parameters = chunk
-    if k >= 1 && !isempty(custom_params)
-        for item in Iterators.partition(custom_params, k)
-            if Empty
-                if chunk == 1 || length(item) == 1
-                    item = replace.(item, "&" => "?")
-                else
-                    item[1] = replace(item[1], "&" => "?")
-                end
-            end
-            push!(res, url._path * edit_params * join(item) * url.fragment)
-        end
-    else
-        push!(res, url._path * edit_params * url.fragment)
-    end
 end
 
-function escape(st::AbstractString)
-    replace(st, "(" => "\\(", ")" => "\\)", "[" => "\\[", "]" => "\\]", "{" => "\\{", "}" => "\\}")
+# Generates Key-Value Pairs in the Format “Key=Value” for Use in Query Strings
+function GenerateQueryKeyVal(Keys::Vector{String}, Values::Vector{String})
+    result = OrderedSet{String}()
+    for (key, value) in Iterators.product(Keys, Values)
+        push!(result, "&$key=$value")
+    end
+    return result
+end
+
+function escape(input::AbstractString)
+    replace(input, "(" => "\\(", ")" => "\\)", "[" => "\\[", "]" => "\\]", "{" => "\\{", "}" => "\\}")
 end
 
 isalphanum(s::String) = startswith(s, r"\w") && endswith(s, r"\w")
@@ -41,5 +27,34 @@ isalphanum(s::String) = startswith(s, r"\w") && endswith(s, r"\w")
 function Write(filename::String, mode::String, data::String)
     open(filename, mode) do file
         write(file, data)
+    end
+end
+
+# Set Given Query Parameters Count In URL
+function SetQueryChunk(url::URL, user_keyval_pairs::OrderedSet{String}, chunk::Int; query::String="")
+    if chunk < url.parameters_count
+        @warn "chunk cant be less than default parameters count \ndefault parameters = $(url.parameters_count)\ninput chunk = $chunk\nurl = $(url._fragment)"
+        exit(0)
+    end
+
+    # check query is empty
+    query = query == "?" ? "" : query
+
+    # Makes Sure => Default Parameters + Input Parameters = Chunk
+    k = abs(url.parameters_count - chunk)
+
+    if k >= 1 && !isempty(user_keyval_pairs)
+        for item in Iterators.partition(user_keyval_pairs, k)
+            if isempty(query)
+                if (chunk == 1) || (length(item) == 1)
+                    item = replace.(item, "&" => "?")
+                else
+                    item[1] = replace(item[1], "&" => "?")
+                end
+            end
+            push!(RESULT, replace(url.url, url.query => query * join(item)))
+        end
+    else
+        push!(RESULT, replace(url.url, url.query => query))
     end
 end
