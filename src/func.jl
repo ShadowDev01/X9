@@ -1,10 +1,29 @@
+const colorReset = "\033[0m"
+const colorRed = "\033[31m"
+const colorLightRed = "\033[91m"
+const colorGreen = "\033[32m"
+const colorYellow = "\033[33m"
+const colorLightYellow = "\033[93m"
+const colorBlue = "\033[34m"
+const colorLightBlue = "\033[94m"
+const colorCyan = "\033[96m"
+const colorMagenta = "\033[35m"
+const colorLightMagenta = "\033[95m"
+const colorWhite = "\033[97m"
+const colorBlack = "\033[30m"
+const textItalic = "\033[3m"
+const textBold = "\033[1m"
+const textBox = "\033[7m"
+const textBlink = "\033[5m"
+const textUnderline = "\033[4m"
+
 # Read File and Return Non Empty Lines 
 # If File Not Exist, Show Error and Exit
 function ReadNonEmptyLines(FilePath::String)
     if isfile(FilePath)
         filter(!isempty, readlines(FilePath))
     else
-        @error "Not Such File or Directory: $FilePath"
+        @error "Not Such File or Directory: $colorLightRed$(FilePath)$colorReset"
         exit(0)
     end
 end
@@ -33,7 +52,7 @@ end
 # Set Given Query Parameters Count In URL
 function SetQueryChunk(url::URL, user_keyval_pairs::OrderedSet{String}, chunk::Int; query::String="")
     if chunk < url.parameters_count
-        @warn "chunk cant be less than default parameters count \ndefault parameters = $(url.parameters_count)\ninput chunk = $chunk\nurl = $(url._fragment)"
+        @error "chunk cant be less than default parameters count \ndefault parameters = $colorYellow$(url.parameters_count)$colorReset\ninput chunk = $colorLightRed$chunk$colorReset\nurl = $colorLightBlue$(url._fragment)$colorReset"
         exit(0)
     end
 
@@ -58,3 +77,5 @@ function SetQueryChunk(url::URL, user_keyval_pairs::OrderedSet{String}, chunk::I
         push!(RESULT, replace(url.url, url.query => query))
     end
 end
+
+const banner::String = "       ___  \r\n__  __/ _ \\\r\n\\ \\/ / (_) |\r\n >  < \\__, |\r\n/_/\\_\\  /_/\r\n     v1.0.1\n\n"

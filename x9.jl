@@ -2,6 +2,7 @@ include("src/args.jl")
 include("src/URL.jl")
 include("src/func.jl")
 
+const arg = ARGUMENTS()
 RESULT = OrderedSet{String}()
 
 function ignore(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{String}, chunk::Int)
@@ -74,58 +75,67 @@ function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
 end
 
 function main()
-    # Get User Passed CLI Argument
-    arguments = ARGUMENTS()
+    printstyled(banner, color=:light_red, blink=true)
 
-    # Extract Arguments
-    Url = arguments["url"]
-    Urls = arguments["urls"] |> ReadNonEmptyLines
-    KEYS = arguments["parameters"] |> ReadNonEmptyLines
-    VALUES = arguments["values"] |> ReadNonEmptyLines
-    CHUNK = arguments["chunk"]
-    OUTPUT = arguments["output"]
+    # Extract arg
+    URLS = String[]
+    KEYS = !isnothing(arg["parameters"]) ? ReadNonEmptyLines(arg["parameters"]) : String[]
+    VALUES = !isnothing(arg["values"]) ? ReadNonEmptyLines(arg["values"]) : String[]
+    CHUNK = arg["chunk"]
+    OUTPUT = arg["output"]
 
     # in order not to interfere with the switches -u / -U
-    if !isnothing(Url)
-        url = [Url]
-    elseif !isnothing(Urls)
-        url = Urls
+    if !isnothing(arg["url"])
+        URLS = isempty(arg["url"]) ? String[] : [arg["url"]]
+    elseif !isnothing(arg["urls"])
+        URLS = arg["urls"] |> ReadNonEmptyLines
     end
 
+    @info "$colorYellow$(length(URLS))$colorReset candidate url(s) detected ✅"
+
+    if isempty(URLS)
+        @warn "provide some url(s) please! 😕"
+        exit(0)
+    end
+
+    @info "Generating urls 🛠️"
     # Call When --ignore passed
-    arguments["ignore"] && ignore(
-        urls=url,
+    arg["ignore"] && ignore(
+        urls=URLS,
         Keys=KEYS,
         Values=VALUES,
         chunk=CHUNK
     )
 
-    arguments["replace-all"] && replace_all(
-        urls=url,
+    arg["rep-all"] && replace_all(
+        urls=URLS,
         Keys=KEYS,
         Values=VALUES,
         chunk=CHUNK
     )
 
-    arguments["replace-alt"] && replace_alternative(
-        urls=url,
+    arg["rep-alt"] && replace_alternative(
+        urls=URLS,
         Values=VALUES
     )
 
-    arguments["suffix-all"] && suffix_all(
-        urls=url,
+    arg["suf-all"] && suffix_all(
+        urls=URLS,
         Values=VALUES
     )
 
-    arguments["suffix-alt"] && suffix_alternative(
-        urls=url,
+    arg["suf-alt"] && suffix_alternative(
+        urls=URLS,
         Values=VALUES
     )
+
+    @info "$colorYellow$(length(RESULT))$colorReset urls generated ✅"
 
     if isnothing(OUTPUT)
-        print(join(unique(RESULT), "\n"))
+        print(join(RESULT, "\n"))
     else
-        Write(OUTPUT, "w+", join(unique(RESULT), "\n"))   # if was not given -o, then print in terminal
+        Write(OUTPUT, "w+", join(RESULT, "\n"))   # if was not given -o, then print in terminal
+        @info "urls saved in $colorGreen$textBold$(arg["output"])$colorReset ✅"
     end
 end
 

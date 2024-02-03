@@ -36,11 +36,11 @@
 *  -v, --values          list of values in file
 *  -c, --chunk           maximum number of parameters in url (type: Int64, default: 10000)
 *  --ignore              does not change the default parameters, just appends the given parameters with the given values to the end of the URL
-*  --replace-all         Replaces all default parameter's values with the given values and appends the given parameters with the given values to the end of the URL
-*  --replace-alt         just replaces the default parameter values with the given values alternately
-*  --suffix-all          append the given values to the end of all the default parameters
-*  --suffix-alt          append the given values to the end of default parameters alternately
-*  --all                 do all --ignore, --replace-all, --replace-alt, --suffix-all, --suffix-alt
+*  --rep-all             Replaces all default parameter's values with the given values and appends the given parameters with the given values to the end of the URL
+*  --rep-alt             just replaces the default parameter values with the given values alternately
+*  --suf-all             append the given values to the end of all the default parameters
+*  --suf-alt             append the given values to the end of default parameters alternately
+*  -A                    do all --ignore, --rep-all, --rep-alt, --suf-all , --suf-alt
 *  -o, --output          save output in file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -90,9 +90,9 @@ https://example.com/path1/?param1=value1&param2=value2&card=BYE
 
 <br>
 
-* using --replace-all option
+* using --rep-all option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --replace-all
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --rep-all
 
 output:
 https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO&login=HELLO&card=HELLO
@@ -101,9 +101,9 @@ https://example.com/path1/?param1=BYE&param2=BYE&user=BYE&id=BYE&login=BYE&card=
 
 <br>
 
-* using --replace-all option with chunk
+* using --rep-all option with chunk
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --replace-all -c 4
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --rep-all -c 4
 
 output:
 https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO
@@ -114,9 +114,9 @@ https://example.com/path1/?param1=BYE&param2=BYE&login=BYE&card=BYE
 
 <br>
 
-* using --replace-alt option
+* using --rep-alt option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt --replace-alt
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt --rep-alt
 
 output:
 https://example.com/path1/?param1=HELLO&param2=value2
@@ -128,9 +128,9 @@ https://example.com/path1/?param1=value1&param2=BYE
 
 <br>
 
-* using --suffix-all option
+* using --suf-all  option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt --suffix-all
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt --suf-all 
 
 output:
 https://example.com/path1/?param1=value1HELLO&param2=value2HELLO
@@ -139,9 +139,9 @@ https://example.com/path1/?param1=value1BYE&param2=value2BYE
 
 <br>
 
-* using --suffix-alt option
+* using --suf-alt option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt --suffix-alt
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt --suf-alt
 
 output:
 https://example.com/path1/?param1=value1HELLO&param2=value2
@@ -152,9 +152,9 @@ https://example.com/path1/?param1=value1&param2=value2BYE
 
 <br>
 
-* using --all option
+* using -A option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --all
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt -A
 
 output:
 https://example.com/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO&login=HELLO&card=HELLO
@@ -175,9 +175,9 @@ https://example.com/path1/?param1=value1&param2=value2BYE
 
 <br>
 
-* using --all option with chunk
+* using -A option with chunk
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --all -c 4
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt -A -c 4
 
 output:
 https://example.com/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO
