@@ -54,7 +54,7 @@ function ARGUMENTS()
 
         "-c", "--chunk"
         help = "maximum number of parameters in url"
-        arg_type = Int
+        arg_type = UInt
         default = 10000
 
         "-o", "--output"

@@ -3,79 +3,155 @@ include("src/URL.jl")
 include("src/func.jl")
 
 
-# user cli arguments
-const arg = ARGUMENTS()
+# user cli argsuments
+const args = ARGUMENTS()
 
 # final results to print
 RESULT = OrderedSet{String}()
 
 
-function ignore(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{String}, chunk::Int)
+function ignore(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{String})
 	Threads.@threads for url in urls
-		Url = URL(url)
+		u = URL(url) # make URL obj
+		fragment = isempty(u.fragment) ? "" : "#" * u.fragment
+
+		# drop all parameters
+		if args["chunk"] == 0
+			str = u._path * fragment
+			push!(RESULT, str)
+			continue
+		end
+
+		# check chunk size
+		if args["chunk"] <= u.query_params_count
+			@warn "The given chunk must be larger than the default URL parameters.\nurl = $(u.raw_url)"
+			continue
+		end
+
+		# possible combination of parameters
+		pairs = OrderedSet{String}()
+
+		# make user custom parameters
 		for value in Values
-			UserKeyValPaires = GenerateQueryKeyVal(Keys, [value])
-			SetQueryChunk(Url, UserKeyValPaires, chunk, query = Url.query)
+			str = Keys .* "=$value"
+			push!(pairs, str...)
+		end
+
+		# count of parmas to add in url
+		k = args["chunk"] - u.query_params_count
+
+		# generate custom urls based on chunk
+		for item in Iterators.partition(pairs, k)
+			# make sure url chunk be correct
+			if length(item) < k
+				params = join(last(pairs, k), "&")
+			else
+				params = join(item, "&")
+			end
+			str = chopsuffix(u._query, "&") * "&" * params * fragment
+			push!(RESULT, str)
 		end
 	end
 end
 
-function replace_all(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{String}, chunk::Int)
+function replace_all(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{String})
 	Threads.@threads for url in urls
-		Url = URL(url)
-		for value in Values
-			UserKeyValPaires = GenerateQueryKeyVal(Keys, [value])
-			# Save Parameters With New Values to Replace in URL
-			kv = Dict{String, String}()
-			for param in filter(!isnothing, Url.parameters_value)
-				get!(kv, param, value)
-			end
-			params::String = Url.query
-			for (k, v) in sort(kv, by = length, rev = true)
-				reg::Regex = isalphanum(k) ? Regex("\\b$(escape(k))\\b") : Regex(k)
-				params = replace(params, reg => v)
-			end
-			SetQueryChunk(Url, UserKeyValPaires, chunk, query = params)
+		u = URL(url) # make URL obj
+		fragment = isempty(u.fragment) ? "" : "#" * u.fragment
+
+		# drop all parameters
+		if args["chunk"] == 0
+			str = u._path * fragment
+			push!(RESULT, str)
+			continue
 		end
+
+		# check chunk size
+		if args["chunk"] <= u.query_params_count
+			@warn "The given chunk must be larger than the default URL parameters.\nurl = $(u.raw_url)"
+			continue
+		end
+
+		# possible combination of parameters
+		pairs = OrderedSet{String}()
+
+		# make user custom parameters
+		for value in Values
+			params = vcat(u.query_params, Keys)
+			str = params .* "=$value"
+			push!(pairs, str...)
+		end
+
+		# generate custom urls based on chunk
+		for item in Iterators.partition(pairs, args["chunk"])
+			params = join(item, "&")
+			str = u._path * "?" * params * fragment
+			push!(RESULT, str)
+		end
+
+
 	end
 end
 
 function replace_alternative(; urls::Vector{String}, Values::Vector{String})
 	Threads.@threads for url in urls
-		Url = URL(url)
-		params = Url.query
-		for (param, value) in Iterators.product(Url.parameters_value, Values)
-			reg::Regex = isalphanum(param) ? Regex("\\=\\b$(escape(param))\\b") : Regex("\\=$param")
-			push!(RESULT, replace(Url.url, Url.query => replace(params, reg => "=$value")))
+		u = URL(url) # make URL obj
+
+		# generate custom urls
+		for value in Values
+			for param in u.query_params
+				key = param * "=" * value
+				custom_url = replace(u.decoded_url, Regex("$(param)(\\=[^\\&]*)?") => key)
+				push!(RESULT, custom_url)
+			end
 		end
+
 	end
 end
 
 function suffix_all(; urls::Vector{String}, Values::Vector{String})
 	Threads.@threads for url in urls
-		Url = URL(url)
+		u = URL(url) # make URL obj
+		fragment = isempty(u.fragment) ? "" : "#" * u.fragment
+
+		# possible combination of parameters
+		pairs = OrderedSet{String}()
+
+		# make possible parameters
 		for value in Values
-			params = Url.query
-			for (p, v) in Iterators.product(Url.parameters_value, [value])
-				reg::Regex = isalphanum(p) ? Regex("\\=\\b$(escape(p))\\b") : Regex("\\=$p")
-				params = replace(params, reg => join(["=", p, v]))
+			params = OrderedSet{String}()
+			for (k, v) in u.query_paires
+				str = k * "=" * v * value
+				push!(params, str)
 			end
-			!isempty(params) && push!(RESULT, replace(Url.url, Url.query => params))
+			push!(pairs, join(params, "&"))
+		end
+
+		# generate custom urls
+		for pair in pairs
+			str = u._path * "?" * pair * fragment
+			push!(RESULT, str)
 		end
 	end
 end
 
 function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
 	Threads.@threads for url in urls
-		Url = URL(url)
-		params = Url.query
-		for (param, value) in Iterators.product(Url.parameters_value, Values)
-			reg::Regex = isalphanum(param) ? Regex("\\=\\b$(escape(param))\\b") : Regex("\\=$param")
-			push!(
-				RESULT,
-				replace(Url.url, Url.query => replace(params, reg => join(["=", param, value]))),
-			)
+		u = URL(url)
+		fragment = isempty(u.fragment) ? "" : "#" * u.fragment
+
+		# possible combination of parameters
+		pairs = OrderedSet{String}()
+
+		# generate custom urls
+		for value in Values
+			for (k, v) in u.query_paires
+				param = k * "=" * v * value
+				custom_url = replace(u.decoded_url, Regex("$(k)(\\=[^\\&]*)?") => param)
+				push!(RESULT, custom_url)
+			end
 		end
+
 	end
 end
 
@@ -83,19 +159,17 @@ function main()
 	Check_Dependencies()
 	printstyled(banner, color = :light_red)
 
-	# Extract arg
+	# Extract args
 	URLS = String[]
-	CHUNK = arg["chunk"]
-	OUTPUT = arg["output"]
-	KEYS = !isnothing(arg["parameters"]) ? ReadNonEmptyLines(arg["parameters"]) : String[]
-	VALUES = !isnothing(arg["values"]) ? ReadNonEmptyLines(arg["values"]) : String[]
+	KEYS = !isnothing(args["parameters"]) ? ReadNonEmptyLines(args["parameters"]) : String[]
+	VALUES = !isnothing(args["values"]) ? ReadNonEmptyLines(args["values"]) : String[]
 
 
 	# in order not to interfere with the switches -u / -U
-	if !isnothing(arg["url"])
-		URLS = isempty(arg["url"]) ? String[] : [arg["url"]]
-	elseif !isnothing(arg["urls"])
-		URLS = arg["urls"] |> ReadNonEmptyLines
+	if !isnothing(args["url"])
+		URLS = isempty(args["url"]) ? String[] : [args["url"]]
+	elseif !isnothing(args["urls"])
+		URLS = args["urls"] |> ReadNonEmptyLines
 	end
 
 	if isempty(URLS)
@@ -106,54 +180,53 @@ function main()
 	@info "$colorYellow$(length(URLS))$colorReset candidate url(s) detected ✅"
 
 	if !any([
-		arg["ignore"],
-		arg["rep-all"],
-		arg["rep-alt"],
-		arg["suf-all"],
-		arg["suf-alt"],
+		args["ignore"],
+		args["rep-all"],
+		args["rep-alt"],
+		args["suf-all"],
+		args["suf-alt"],
 	])
 		@warn "choose any switch options ex: --ignore / ..."
 		exit(0)
 	end
 
 	@info "Generating urls 🛠️"
+	
 	# Call When --ignore passed
-	arg["ignore"] && ignore(
+	args["ignore"] && ignore(
 		urls = URLS,
 		Keys = KEYS,
 		Values = VALUES,
-		chunk = CHUNK,
 	)
 
-	arg["rep-all"] && replace_all(
+	args["rep-all"] && replace_all(
 		urls = URLS,
 		Keys = KEYS,
 		Values = VALUES,
-		chunk = CHUNK,
 	)
 
-	arg["rep-alt"] && replace_alternative(
+	args["rep-alt"] && replace_alternative(
 		urls = URLS,
 		Values = VALUES,
 	)
 
-	arg["suf-all"] && suffix_all(
+	args["suf-all"] && suffix_all(
 		urls = URLS,
 		Values = VALUES,
 	)
 
-	arg["suf-alt"] && suffix_alternative(
+	args["suf-alt"] && suffix_alternative(
 		urls = URLS,
 		Values = VALUES,
 	)
 
 	@info "$colorYellow$(length(RESULT))$colorReset urls generated ✅"
 
-	if isnothing(OUTPUT)
+	if isnothing(args["output"])
 		print(join(RESULT, "\n"))
 	else
-		Write(OUTPUT, "w+", join(RESULT, "\n"))   # if was not given -o, then print in terminal
-		@info "urls saved in $colorGreen$textBold$(arg["output"])$colorReset ✅"
+		Write(args["output"], "w+", join(RESULT, "\n"))   # if was not given -o, then print in terminal
+		@info "urls saved in $colorGreen$textBold$(args["output"])$colorReset ✅"
 	end
 end
 

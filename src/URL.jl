@@ -12,12 +12,12 @@ https://admin:test1234@login.admin-auth.company.co.com:443/admin/desk/master.js?
 
 """
 struct URL
-	rawurl::String                          # raw url without decode
-	url::String                             # decoded url
+	raw_url::String                         # raw url without decode
+	decoded_url::String                     # decoded url
 	scheme::String                          # https
 	username::String                        # admin
 	password::String                        # test1234
-	authenticate::String                    # admin:test1234
+	auth::String                   # admin:test1234
 	host::String                            # login.admin-auth.company.co.com 
 	subdomain::String                       # login.admin-auth
 	domain::String                          # company
@@ -27,13 +27,14 @@ struct URL
 	directory::String                       # /admin/desk
 	file::String                            # master.js
 	file_name::String                       # master
-	file_extension::String                  # js
+	file_ext::String                  # js
 	query::String                           # A=line+25&B=#12&C
+	query_params::Vector{String}            # ["A", "B", "C"]
+	query_values::Vector{String}       # ["line+25", "#12"]
+	query_paires::OrderedDict{String, Any}# {"A":"line+25", "B":"#12", "C":null}
+	query_params_count::Int32               # 3
+	query_values_count::Int32           # 2
 	fragment::String                        # justfortest
-	parameters::Vector{String}              # ["A", "B", "C"]
-	parameters_count::Int32                 # 3
-	parameters_value::Vector{String}        # ["line+25", "#12"]
-	parameters_value_count::Int32           # 2
 
 	# From the beginning of URL to the given section
 	_scheme::String                         # https://
@@ -70,9 +71,15 @@ function HTML_Decode(url::AbstractString)
 
 	# HTML Symbol Decode
 	while occursin(r"&(gt|lt|quot|apos|amp);"i, url)
-		url = replace(url, r"&gt;"i => ">", r"&lt;"i => "<", r"&quot;"i => "\"", r"&apos;"i => "'", r"&amp;"i => "&")
+		url = replace(
+			url,
+			r"&gt;"i => ">",
+			r"&lt;"i => "<",
+			r"&quot;"i => "\"",
+			r"&apos;"i => "'",
+			r"&amp;"i => "&",
+		)
 	end
-
 	return url
 end
 
@@ -112,7 +119,11 @@ login.admin-auth => ["login.admin-auth", "login", "admin", "auth", "admin-auth"]
 """
 function SubCombination(url::URL)
 	subdomain::String = url.subdomain
-	unique(vcat([subdomain], split(subdomain, r"[\.\-]"), split(subdomain, ".")))
+	unique(vcat(
+		[subdomain],
+		split(subdomain, r"[\.\-]"),
+		split(subdomain, "."))
+	)
 end
 
 # split name & extension of file
@@ -144,31 +155,48 @@ function QueryParamsValues(query::AbstractString)
 	return unique(filter(!isempty, result))
 end
 
-function URL(Url::AbstractString)
-	url::String = Url |> URL_Decode |> HTML_Decode
+# extract Query parameters - values in key:value pairs
+function QueryPairs(query::AbstractString)
+	d = OrderedDict{String, Any}()
+	query = chopprefix(query, "?")
+
+	for item in eachsplit(query, "&")
+		if !occursin("=", item)
+			item *= "="
+		end
+		k, v = split(item, "=")
+		v == "null" && (v = nothing)
+		d[k] = v
+	end
+	return d
+end
+
+function URL(input_url::AbstractString)
+	url::String = input_url |> URL_Decode |> HTML_Decode
 	url = chopprefix(url, "*.")
 	regex::Regex = r"^((?<scheme>([a-zA-Z]+)):\/\/)?((?<username>([\w\-]+))\:?(?<password>(.*?))\@)?(?<host>([\w\-\.]+)):?(?<port>(\d+))?(?<path>([\/\w\-\.\%\,\"\'\<\>\=\(\)]+))?(?<query>\?(.*?))?(?<fragment>(?<!\=)\#([^\#]*?))?$"
 	parts = match(regex, url)
 
-	rawurl::String = Url
-	Url::String = url
+	raw_url::String = input_url
+	decoded_url::String = url
 	scheme::String = check_str(parts["scheme"])
 	username::String = check_str(parts["username"])
 	password::String = check_str(parts["password"])
-	authenticate::String = chopsuffix(check_str(parts[4]), "@")
+	auth::String = chopsuffix(check_str(parts[4]), "@")
 	host::String = chopprefix(check_str(parts["host"]), "www.")
 	subdomain::String, domain::String, tld::String = split_domain(host)
 	port::String = check_str(parts["port"])
 	path::String = check_str(parts["path"])
 	directory::String = dirname(path)
 	file::String = basename(path)
-	file_name::String, file_extension::String = split_file(file)
+	file_name::String, file_ext::String = split_file(file)
 	query::String = check_str(parts["query"])
+	query_params::Vector{String} = QueryParams(query)
+	query_values::Vector{String} = QueryParamsValues(query)
+	query_paires::OrderedDict{String, Any} = QueryPairs(query)
+	query_params_count::Int32 = length(query_params)
+	query_values_count::Int32 = length(query_values)
 	fragment::String = check_str(parts[18])
-	parameters::Vector{String} = QueryParams(query)
-	parameters_count::Int32 = length(parameters)
-	parameters_value::Vector{String} = QueryParamsValues(query)
-	parameters_value_count::Int32 = length(parameters_value)
 
 	_scheme::String = check_str(parts[1])
 	_auth::String = _scheme * check_str(parts[4])
@@ -179,12 +207,12 @@ function URL(Url::AbstractString)
 	_fragment::String = url
 
 	return URL(
-		rawurl,
-		Url,
+		raw_url,
+		decoded_url,
 		scheme,
 		username,
 		password,
-		authenticate,
+		auth,
 		host,
 		subdomain,
 		domain,
@@ -194,13 +222,14 @@ function URL(Url::AbstractString)
 		directory,
 		file,
 		file_name,
-		file_extension,
+		file_ext,
 		query,
+		query_params,
+		query_values,
+		query_paires,
+		query_params_count,
+		query_values_count,
 		fragment,
-		parameters,
-		parameters_count,
-		parameters_value,
-		parameters_value_count,
 		_scheme,
 		_auth,
 		_host,
@@ -214,12 +243,12 @@ end
 # JSON output of URL sections
 function Json(url::URL)
 	custom_json = OrderedDict{String, Any}(
-		"rawurl" => url.rawurl,
-		"url" => url.url,
+		"raw_url" => url.raw_url,
+		"decoded_url" => url.decoded_url,
 		"scheme" => url.scheme,
 		"username" => url.username,
 		"password" => url.password,
-		"authenticate" => url.authenticate,
+		"auth" => url.auth,
 		"host" => url.host,
 		"subdomain" => url.subdomain,
 		"subdomain_combination" => SubCombination(url),
@@ -230,13 +259,14 @@ function Json(url::URL)
 		"directory" => url.directory,
 		"file" => url.file,
 		"file_name" => url.file_name,
-		"file_ext" => url.file_extension,
+		"file_ext" => url.file_ext,
 		"query" => chopprefix(url.query, "?"),
+		"query_params" => url.query_params,
+		"query_values" => url.query_values,
+		"query_paires" => url.query_paires,
+		"query_params_count" => url.query_params_count,
+		"query_values_count" => url.query_values_count,
 		"fragment" => url.fragment,
-		"parameters" => url.parameters,
-		"parameters_count" => url.parameters_count,
-		"parameters_value" => url.parameters_value,
-		"parameters_value_count" => url.parameters_value_count,
 	)
 	for (key, value) in pairs(custom_json)
 		if isempty(value) || value == [""] || value == 0
