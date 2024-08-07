@@ -24,7 +24,7 @@ function ignore(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{Str
 
 		# check chunk size
 		if args["chunk"] <= u.query_params_count
-			@warn "The given chunk must be larger than the default URL parameters.\nurl = $(u.raw_url)"
+			@warn "[--ignore]: The given chunk must be larger than the default URL parameters.\nurl = $(u.raw_url)"
 			continue
 		end
 
@@ -74,7 +74,7 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}, Values::Vecto
 
 		# check chunk size
 		if args["chunk"] <= u.query_params_count
-			@warn "The given chunk must be larger than the default URL parameters.\nurl = $(u.raw_url)"
+			@warn "[--rep-all]: The given chunk must be larger than the default URL parameters.\nurl = $(u.raw_url)"
 			continue
 		end
 
@@ -104,7 +104,7 @@ function replace_alternative(; urls::Vector{String}, Values::Vector{String})
 		u = URL(url) # make URL obj
 
 		if isempty(u.query)
-			@warn "url has no query part\nurl = $(u.decoded_url)"
+			@warn "[--rep-alt]: url has no query part\nurl = $(u.decoded_url)"
 			continue
 		end
 
@@ -126,7 +126,7 @@ function suffix_all(; urls::Vector{String}, Values::Vector{String})
 		fragment = isempty(u.fragment) ? "" : "#" * u.fragment
 
 		if isempty(u.query)
-			@warn "url has no query part\nurl = $(u.decoded_url)"
+			@warn "[--suf-all]: url has no query part\nurl = $(u.decoded_url)"
 			continue
 		end
 
@@ -157,7 +157,7 @@ function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
 		fragment = isempty(u.fragment) ? "" : "#" * u.fragment
 
 		if isempty(u.query)
-			@warn "url has no query part\nurl = $(u.decoded_url)"
+			@warn "[--suf-alt]: url has no query part\nurl = $(u.decoded_url)"
 			continue
 		end
 
@@ -198,7 +198,7 @@ function main()
 		exit(0)
 	end
 
-	@info "$colorYellow$(length(URLS))$colorReset candidate url(s) detected ✅"
+	@info "$colorYellow$(length(URLS))$colorReset url(s) detected ✅"
 
 	if !any([
 		args["ignore"],
