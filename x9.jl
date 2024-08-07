@@ -48,7 +48,13 @@ function ignore(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{Str
 			else
 				params = join(item, "&")
 			end
-			str = chopsuffix(u._query, "&") * "&" * params * fragment
+
+			if isempty(u.query)
+				str = chopsuffix(u._path, "?") * "?" * params * fragment
+			else
+				str = chopsuffix(u._query, "&") * "&" * params * fragment
+			end
+
 			push!(RESULT, str)
 		end
 	end
@@ -97,6 +103,11 @@ function replace_alternative(; urls::Vector{String}, Values::Vector{String})
 	Threads.@threads for url in urls
 		u = URL(url) # make URL obj
 
+		if isempty(u.query)
+			@warn "url has no query part\nurl = $(u.decoded_url)"
+			continue
+		end
+
 		# generate custom urls
 		for value in Values
 			for param in u.query_params
@@ -113,6 +124,11 @@ function suffix_all(; urls::Vector{String}, Values::Vector{String})
 	Threads.@threads for url in urls
 		u = URL(url) # make URL obj
 		fragment = isempty(u.fragment) ? "" : "#" * u.fragment
+
+		if isempty(u.query)
+			@warn "url has no query part\nurl = $(u.decoded_url)"
+			continue
+		end
 
 		# possible combination of parameters
 		pairs = OrderedSet{String}()
@@ -139,6 +155,11 @@ function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
 	Threads.@threads for url in urls
 		u = URL(url)
 		fragment = isempty(u.fragment) ? "" : "#" * u.fragment
+
+		if isempty(u.query)
+			@warn "url has no query part\nurl = $(u.decoded_url)"
+			continue
+		end
 
 		# possible combination of parameters
 		pairs = OrderedSet{String}()
@@ -191,7 +212,7 @@ function main()
 	end
 
 	@info "Generating urls 🛠️"
-	
+
 	# Call When --ignore passed
 	args["ignore"] && ignore(
 		urls = URLS,
