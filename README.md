@@ -6,8 +6,6 @@
 
 # Install
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                            *** julia ***
-
 # install julia: https://julialang.org/downloads/    or    snap install julia --classic
 # then run this commands in terminal:
 
