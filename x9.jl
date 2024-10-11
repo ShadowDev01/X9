@@ -1,13 +1,16 @@
+include("src/deps.jl")
 include("src/args.jl")
 include("src/URL.jl")
 include("src/func.jl")
+
+
 
 
 # user cli argsuments
 const args = ARGUMENTS()
 
 # final results to print
-RESULT = OrderedSet{String}()
+RESULT = OrderedSet{Base.AnnotatedString{String}}()
 
 
 function ignore(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{String})
@@ -29,12 +32,14 @@ function ignore(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{Str
 		end
 
 		# possible combination of parameters
-		pairs = OrderedSet{String}()
+		pairs = OrderedSet{Base.AnnotatedString{String}}()
 
 		# make user custom parameters
 		for value in Values
-			str = Keys .* "=$value"
-			push!(pairs, str...)
+			for k in Keys
+				str = styled"{bold,tip:$k}" * styled"={bright_blue:$value}"
+				push!(pairs, str)
+			end
 		end
 
 		# count of parmas to add in url
@@ -79,13 +84,15 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}, Values::Vecto
 		end
 
 		# possible combination of parameters
-		pairs = OrderedSet{String}()
+		pairs = OrderedSet{Base.AnnotatedString{String}}()
 
 		# make user custom parameters
 		for value in Values
 			params = vcat(u.query_params, Keys)
-			str = params .* "=$value"
-			push!(pairs, str...)
+			for param in params
+				str = styled"{tip:$param}" .* styled"={bold,bright_blue:$value}"
+				push!(pairs, str)
+			end
 		end
 
 		# generate custom urls based on chunk
@@ -94,7 +101,6 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}, Values::Vecto
 			str = u._path * "?" * params * fragment
 			push!(RESULT, str)
 		end
-
 
 	end
 end
@@ -113,7 +119,15 @@ function replace_alternative(; urls::Vector{String}, Values::Vector{String})
 			for param in u.query_params
 				key = param * "=" * value
 				custom_url = replace(u.decoded_url, Regex("$(param)(\\=[^\\&]*)?") => key)
-				push!(RESULT, custom_url)
+				idxp = findfirst(param, custom_url)
+				idxv = findfirst(value, custom_url)
+				push!(
+					RESULT,
+					Base.AnnotatedString(custom_url, [
+						(idxp, :face => :tip),
+						(idxv, :face => :bright_blue),
+					]),
+				)
 			end
 		end
 
@@ -131,13 +145,13 @@ function suffix_all(; urls::Vector{String}, Values::Vector{String})
 		end
 
 		# possible combination of parameters
-		pairs = OrderedSet{String}()
+		pairs = OrderedSet{Base.AnnotatedString{String}}()
 
 		# make possible parameters
 		for value in Values
-			params = OrderedSet{String}()
+			params = OrderedSet{Base.AnnotatedString{String}}()
 			for (k, v) in u.query_paires
-				str = k * "=" * v * value
+				str = styled"{tip:$k}" * "=" * v * styled"{bold,bright_blue:$value}"
 				push!(params, str)
 			end
 			push!(pairs, join(params, "&"))
@@ -161,15 +175,20 @@ function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
 			continue
 		end
 
-		# possible combination of parameters
-		pairs = OrderedSet{String}()
-
 		# generate custom urls
 		for value in Values
 			for (k, v) in u.query_paires
 				param = k * "=" * v * value
 				custom_url = replace(u.decoded_url, Regex("$(k)(\\=[^\\&]*)?") => param)
-				push!(RESULT, custom_url)
+				idxp = findfirst(k, custom_url)
+				idxv = findfirst(value, custom_url)
+				push!(
+					RESULT,
+					Base.AnnotatedString(custom_url, [
+						(idxp, :face => :tip),
+						(idxv, :face => :bright_blue),
+					]),
+				)
 			end
 		end
 
@@ -177,7 +196,6 @@ function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
 end
 
 function main()
-	Check_Dependencies()
 	printstyled(banner, color = :light_red)
 
 	# Extract args
@@ -198,7 +216,7 @@ function main()
 		exit(0)
 	end
 
-	@info "$colorYellow$(length(URLS))$colorReset url(s) detected ✅"
+	@info styled"{yellow:$(length(URLS))} url(s) detected ✅"
 
 	if !any([
 		args["ignore"],
@@ -207,7 +225,7 @@ function main()
 		args["suf-all"],
 		args["suf-alt"],
 	])
-		@warn "choose any switch options ex: --ignore / ..."
+		@warn styled"choose any switch options: {region:--ignore / ...}"
 		exit(0)
 	end
 
@@ -241,13 +259,13 @@ function main()
 		Values = VALUES,
 	)
 
-	@info "$colorYellow$(length(RESULT))$colorReset urls generated ✅"
+	@info styled"{yellow:$(length(RESULT))} urls generated ✅"
 
 	if isnothing(args["output"])
 		print(join(RESULT, "\n"))
 	else
 		Write(args["output"], "w+", join(RESULT, "\n"))   # if was not given -o, then print in terminal
-		@info "urls saved in $colorGreen$textBold$(args["output"])$colorReset ✅"
+		@info styled"""urls saved in {bold,region:$(args["output"])} ✅"""
 	end
 end
 
