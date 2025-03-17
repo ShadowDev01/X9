@@ -95,6 +95,7 @@ function URL_Decode(url::String)::String
 	return url
 end
 
+
 # HTML Decode (HEX / DEC)
 function HTML_Decode(url::String)::String
 	# As long as the &#(hex|dec) exists, it will continue to url docode
@@ -120,14 +121,19 @@ function HTML_Decode(url::String)::String
 	return url
 end
 
+const TLDs = begin
+	file = isfile("tlds.txt") ? "tlds.txt" : "src/tlds.txt"
+	readlines(file) |> Set
+end
+
 # extract subdomain, domain & tld from host
 function split_domain(host::String)
 	# extract tld
-	file = isfile("tlds.txt") ? "tlds.txt" : "src/tlds.txt"
 	tlds = Set{String}()
-	for line in eachline(file)
-		endswith(host, line) && push!(tlds, line)
+	for tld in TLDs
+		endswith(host, tld) && push!(tlds, tld)
 	end
+
 	tld = argmax(length, tlds)[2:end]
 
 	# extract subdomain & domain
