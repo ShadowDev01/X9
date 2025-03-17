@@ -27,19 +27,19 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # optional arguments:
 
-*  -h, --help            show this help message and exit
-*  -u, --url             single url
-*  -U, --urls            list of urls in file
-*  -p, --parameters      list of parameters in file
-*  -v, --values          list of values in file
-*  -c, --chunk           maximum number of parameters in url (type: Int64, default: 10000)
-*  --ignore              does not change the default parameters, just appends the given parameters with the given values to the end of the URL
-*  --rep-all             Replaces all default parameter's values with the given values and appends the given parameters with the given values to the end of the URL
-*  --rep-alt             just replaces the default parameter values with the given values alternately
-*  --suf-all             append the given values to the end of all the default parameters
-*  --suf-alt             append the given values to the end of default parameters alternately
-*  -A                    do all --ignore, --rep-all, --rep-alt, --suf-all , --suf-alt
-*  -o, --output          save output in file
+*  -h                    Display this help message and exit
+*  -u                    Process a single URL
+*  -ul                   Process URLs from a file (one per line)
+*  -p                    Use parameters from a file (one per line)
+*  -v                    Use values from a file (one per line)
+*  -c                    Limit parameters per URL (default: 10000)
+*  -ignore               Keep default parameters; append new ones
+*  -rep-all              Replace all default values and append new parameters
+*  -rep-alt              Replace default values alternately
+*  -suf-all              Append values to all default parameters
+*  -suf-alt              Append values to default parameters alternately
+*  -A                    Apply all -ignore, -rep-all, -rep-alt, -suf-all , -suf-alt
+*  -o 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Examples
@@ -60,9 +60,9 @@
 
 <br>
 
-* using --ignore option
+* using -ignore option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --ignore
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt -ignore
 
 output:
 https://example.com/path1/?param1=value1&param2=value2&user=HELLO&id=HELLO&login=HELLO&card=HELLO
@@ -71,9 +71,9 @@ https://example.com/path1/?param1=value1&param2=value2&user=BYE&id=BYE&login=BYE
 
 <br>
 
-* using --ignore option with chunk
+* using -ignore option with chunk
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --ignore -c 3 
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt -ignore -c 3 
 
 output:
 https://example.com/path1/?param1=value1&param2=value2&user=HELLO
@@ -88,9 +88,9 @@ https://example.com/path1/?param1=value1&param2=value2&card=BYE
 
 <br>
 
-* using --rep-all option
+* using -rep-all option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --rep-all
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt -rep-all
 
 output:
 https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO&login=HELLO&card=HELLO
@@ -99,9 +99,9 @@ https://example.com/path1/?param1=BYE&param2=BYE&user=BYE&id=BYE&login=BYE&card=
 
 <br>
 
-* using --rep-all option with chunk
+* using -rep-all option with chunk
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt --rep-all -c 4
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -p p.txt -v v.txt -rep-all -c 4
 
 output:
 https://example.com/path1/?param1=HELLO&param2=HELLO&user=HELLO&id=HELLO
@@ -112,9 +112,9 @@ https://example.com/path1/?param1=BYE&param2=BYE&login=BYE&card=BYE
 
 <br>
 
-* using --rep-alt option
+* using -rep-alt option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt --rep-alt
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt -rep-alt
 
 output:
 https://example.com/path1/?param1=HELLO&param2=value2
@@ -126,9 +126,9 @@ https://example.com/path1/?param1=value1&param2=BYE
 
 <br>
 
-* using --suf-all  option
+* using -suf-all  option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt --suf-all 
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt -suf-all 
 
 output:
 https://example.com/path1/?param1=value1HELLO&param2=value2HELLO
@@ -137,9 +137,9 @@ https://example.com/path1/?param1=value1BYE&param2=value2BYE
 
 <br>
 
-* using --suf-alt option
+* using -suf-alt option
 ~~~
-> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt --suf-alt
+> julia x9.jl -u "https://example.com/path1/?param1=value1&param2=value2" -v v.txt -suf-alt
 
 output:
 https://example.com/path1/?param1=value1HELLO&param2=value2
