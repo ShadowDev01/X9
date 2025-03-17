@@ -1,33 +1,28 @@
-include("src/deps.jl")
+include("src/func.jl")
+ensure_package()
 include("src/args.jl")
 include("src/URL.jl")
-include("src/func.jl")
 
 
+function ignore(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{String}, chunk::Int)
+	result = OrderedSet{Base.AnnotatedString{String}}()
 
-
-# user cli argsuments
-const args = ARGUMENTS()
-
-# final results to print
-RESULT = OrderedSet{Base.AnnotatedString{String}}()
-
-
-function ignore(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{String})
-	Threads.@threads for url in urls
-		u = URL(url) # make URL obj
-		fragment = isempty(u.fragment) ? "" : "#" * u.fragment
+	Threads.@threads for u in urls
+		# make URL obj
+		url = URL(u)
+		fragment = isempty(url.fragment) ? "" : "#" * url.fragment
 
 		# drop all parameters
-		if args["chunk"] == 0
-			str = u._path * fragment
-			push!(RESULT, str)
+		if chunk == 0
+			str = url._path * fragment
+			push!(result, str)
 			continue
 		end
 
 		# check chunk size
-		if args["chunk"] <= u.query_params_count
-			@warn "[--ignore]: The given chunk must be larger than the default URL parameters.\nurl = $(u.raw_url)"
+		L = length(QueryParams(url.query))
+		if chunk <= L
+			@warn "[--ignore]: The given chunk must be larger than the default URL parameters.\nurl = $(url.raw_url)"
 			continue
 		end
 
@@ -35,51 +30,54 @@ function ignore(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{Str
 		pairs = OrderedSet{Base.AnnotatedString{String}}()
 
 		# make user custom parameters
-		for value in Values
-			for k in Keys
-				str = styled"{bold,tip:$k}" * styled"={bright_blue:$value}"
-				push!(pairs, str)
-			end
+		for (k, v) in Iterators.product(Keys, Values)
+			str = styled"{bold,tip:$k}" * styled"={bright_blue:$v}"
+			push!(pairs, str)
 		end
 
 		# count of parmas to add in url
-		k = args["chunk"] - u.query_params_count
+		k = chunk - L
 
-		# generate custom urls based on chunk
+		# generate custom urls based on c
 		for item in Iterators.partition(pairs, k)
-			# make sure url chunk be correct
+			# make sure url chunk is correct
 			if length(item) < k
 				params = join(last(pairs, k), "&")
 			else
 				params = join(item, "&")
 			end
 
-			if isempty(u.query)
-				str = chopsuffix(u._path, "?") * "?" * params * fragment
+			if isempty(url.query)
+				str = chopsuffix(url._path, "?") * "?" * params * fragment
 			else
-				str = chopsuffix(u._query, "&") * "&" * params * fragment
+				str = chopsuffix(url._query, "&") * "&" * params * fragment
 			end
 
-			push!(RESULT, str)
+			push!(result, str)
 		end
 	end
+	return result
 end
 
-function replace_all(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{String})
-	Threads.@threads for url in urls
-		u = URL(url) # make URL obj
-		fragment = isempty(u.fragment) ? "" : "#" * u.fragment
+function replace_all(; urls::Vector{String}, Keys::Vector{String}, Values::Vector{String}, chunk::Int)
+	result = OrderedSet{Base.AnnotatedString{String}}()
+
+	Threads.@threads for u in urls
+		# make URL obj
+		url = URL(u)
+		fragment = isempty(url.fragment) ? "" : "#" * url.fragment
 
 		# drop all parameters
-		if args["chunk"] == 0
-			str = u._path * fragment
-			push!(RESULT, str)
+		if chunk == 0
+			str = url._path * fragment
+			push!(result, str)
 			continue
 		end
 
 		# check chunk size
-		if args["chunk"] <= u.query_params_count
-			@warn "[--rep-all]: The given chunk must be larger than the default URL parameters.\nurl = $(u.raw_url)"
+		L = length(QueryParams(url.query))
+		if chunk <= L
+			@warn "[--rep-all]: The given chunk must be larger than the default URL parameters.\nurl = $(url.raw_url)"
 			continue
 		end
 
@@ -88,7 +86,7 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}, Values::Vecto
 
 		# make user custom parameters
 		for value in Values
-			params = vcat(u.query_params, Keys)
+			params = vcat(QueryParams(url.query), Keys)
 			for param in params
 				str = styled"{tip:$param}" .* styled"={bold,bright_blue:$value}"
 				push!(pairs, str)
@@ -96,51 +94,57 @@ function replace_all(; urls::Vector{String}, Keys::Vector{String}, Values::Vecto
 		end
 
 		# generate custom urls based on chunk
-		for item in Iterators.partition(pairs, args["chunk"])
+		for item in Iterators.partition(pairs, chunk)
 			params = join(item, "&")
-			str = u._path * "?" * params * fragment
-			push!(RESULT, str)
+			str = url._path * "?" * params * fragment
+			push!(result, str)
 		end
-
 	end
+	return result
 end
 
 function replace_alternative(; urls::Vector{String}, Values::Vector{String})
-	Threads.@threads for url in urls
-		u = URL(url) # make URL obj
+	result = OrderedSet{Base.AnnotatedString{String}}()
 
-		if isempty(u.query)
-			@warn "[--rep-alt]: url has no query part\nurl = $(u.decoded_url)"
+	Threads.@threads for u in urls
+		url = URL(u) # make URL obj
+
+		if isempty(url.query)
+			@warn "[-rep-alt]: url has no query part\nurl = $(url.decoded_url)"
 			continue
 		end
 
 		# generate custom urls
 		for value in Values
-			for param in u.query_params
+			for param in QueryParams(url.query)
 				key = param * "=" * value
-				custom_url = replace(u.decoded_url, Regex("$(param)(\\=[^\\&]*)?") => key)
+				custom_url = replace(url.decoded_url, Regex("$(param)(\\=[^\\&]*)?") => key)
 				idxp = findfirst(param, custom_url)
 				idxv = findfirst(value, custom_url)
 				push!(
-					RESULT,
-					Base.AnnotatedString(custom_url, [
-						(idxp, :face => :tip),
-						(idxv, :face => :bright_blue),
-					]),
+					result,
+					Base.AnnotatedString(custom_url,
+						[
+							(region = idxp, label = :face, value = :tip),
+							(region = idxv, label = :face, value = :bright_blue),
+						],
+					),
 				)
 			end
 		end
-
 	end
+	return result
 end
 
 function suffix_all(; urls::Vector{String}, Values::Vector{String})
-	Threads.@threads for url in urls
-		u = URL(url) # make URL obj
-		fragment = isempty(u.fragment) ? "" : "#" * u.fragment
+	result = OrderedSet{Base.AnnotatedString{String}}()
 
-		if isempty(u.query)
-			@warn "[--suf-all]: url has no query part\nurl = $(u.decoded_url)"
+	Threads.@threads for u in urls
+		url = URL(u) # make URL obj
+		fragment = isempty(url.fragment) ? "" : "#" * u.fragment
+
+		if isempty(url.query)
+			@warn "[-suf-all]: url has no query part\nurl = $(url.decoded_url)"
 			continue
 		end
 
@@ -150,7 +154,7 @@ function suffix_all(; urls::Vector{String}, Values::Vector{String})
 		# make possible parameters
 		for value in Values
 			params = OrderedSet{Base.AnnotatedString{String}}()
-			for (k, v) in u.query_paires
+			for (k, v) in QueryPairs(url.query)
 				str = styled"{tip:$k}" * "=" * v * styled"{bold,bright_blue:$value}"
 				push!(params, str)
 			end
@@ -159,113 +163,102 @@ function suffix_all(; urls::Vector{String}, Values::Vector{String})
 
 		# generate custom urls
 		for pair in pairs
-			str = u._path * "?" * pair * fragment
-			push!(RESULT, str)
+			str = url._path * "?" * pair * fragment
+			push!(result, str)
 		end
 	end
+	return result
 end
 
 function suffix_alternative(; urls::Vector{String}, Values::Vector{String})
-	Threads.@threads for url in urls
-		u = URL(url)
-		fragment = isempty(u.fragment) ? "" : "#" * u.fragment
+	result = OrderedSet{Base.AnnotatedString{String}}()
 
-		if isempty(u.query)
-			@warn "[--suf-alt]: url has no query part\nurl = $(u.decoded_url)"
+	Threads.@threads for u in urls
+		url = URL(u)
+		fragment = isempty(url.fragment) ? "" : "#" * url.fragment
+
+		if isempty(url.query)
+			@warn "[-suf-alt]: url has no query part\nurl = $(url.decoded_url)"
 			continue
 		end
 
 		# generate custom urls
 		for value in Values
-			for (k, v) in u.query_paires
+			for (k, v) in QueryPairs(url.query)
 				param = k * "=" * v * value
-				custom_url = replace(u.decoded_url, Regex("$(k)(\\=[^\\&]*)?") => param)
+				custom_url = replace(url.decoded_url, Regex("$(k)(\\=[^\\&]*)?") => param)
 				idxp = findfirst(k, custom_url)
 				idxv = findfirst(value, custom_url)
 				push!(
-					RESULT,
+					result,
 					Base.AnnotatedString(custom_url, [
-						(idxp, :face => :tip),
-						(idxv, :face => :bright_blue),
+						(region = idxp, label = :face, value = :tip),
+						(region = idxv, label = :face, value = :bright_blue),
 					]),
 				)
 			end
 		end
 
 	end
+	return result
 end
 
 function main()
+	RESULT = OrderedSet{Base.AnnotatedString{String}}()
+
+	# cli argsuments
+	args = ARGUMENTS()
+
 	printstyled(banner, color = :light_red)
 
-	# Extract args
-	URLS = String[]
-	KEYS = !isnothing(args["parameters"]) ? ReadNonEmptyLines(args["parameters"]) : String[]
-	VALUES = !isnothing(args["values"]) ? ReadNonEmptyLines(args["values"]) : String[]
+	try
+		if args["ignore"]
+			push!(RESULT, ignore(
+				urls = args["source"],
+				Keys = args["params"],
+				Values = args["values"],
+				chunk = args["c"],
+			)...)
+		end
 
+		if args["rep-all"]
+			push!(RESULT, replace_all(
+				urls = args["source"],
+				Keys = args["params"],
+				Values = args["values"],
+				chunk = args["c"],
+			)...)
+		end
 
-	# in order not to interfere with the switches -u / -U
-	if !isnothing(args["url"])
-		URLS = isempty(args["url"]) ? String[] : [args["url"]]
-	elseif !isnothing(args["urls"])
-		URLS = args["urls"] |> ReadNonEmptyLines
+		if args["rep-alt"]
+			push!(RESULT, replace_alternative(
+				urls = args["source"],
+				Values = args["values"],
+			)...)
+		end
+
+		if args["suf-all"]
+			push!(RESULT, suffix_all(
+				urls = args["source"],
+				Values = args["values"],
+			)...)
+		end
+
+		if args["suf-alt"]
+			push!(RESULT, suffix_alternative(
+				urls = args["source"],
+				Values = args["values"],
+			)...)
+		end
+
+	catch
 	end
 
-	if isempty(URLS)
-		@warn "provide some url(s) please! 😕"
-		exit(0)
-	end
-
-	@info styled"{yellow:$(length(URLS))} url(s) detected ✅"
-
-	if !any([
-		args["ignore"],
-		args["rep-all"],
-		args["rep-alt"],
-		args["suf-all"],
-		args["suf-alt"],
-	])
-		@warn styled"choose any switch options: {region:--ignore / ...}"
-		exit(0)
-	end
-
-	@info "Generating urls 🛠️"
-
-	# Call When --ignore passed
-	args["ignore"] && ignore(
-		urls = URLS,
-		Keys = KEYS,
-		Values = VALUES,
-	)
-
-	args["rep-all"] && replace_all(
-		urls = URLS,
-		Keys = KEYS,
-		Values = VALUES,
-	)
-
-	args["rep-alt"] && replace_alternative(
-		urls = URLS,
-		Values = VALUES,
-	)
-
-	args["suf-all"] && suffix_all(
-		urls = URLS,
-		Values = VALUES,
-	)
-
-	args["suf-alt"] && suffix_alternative(
-		urls = URLS,
-		Values = VALUES,
-	)
-
-	@info styled"{yellow:$(length(RESULT))} urls generated ✅"
-
-	if isnothing(args["output"])
+	if isempty(args["o"])
 		print(join(RESULT, "\n"))
 	else
-		Write(args["output"], "w+", join(RESULT, "\n"))   # if was not given -o, then print in terminal
-		@info styled"""urls saved in {bold,region:$(args["output"])} ✅"""
+		Write(args["o"], "w+", join(RESULT, "\n"))   # if was not given -o, then print in terminal
+		@info styled"""urls saved in {bold,region:$(args["o"])} ✅"""
 	end
 end
 

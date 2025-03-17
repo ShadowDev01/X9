@@ -1,4 +1,13 @@
 using StyledStrings
+using Pkg: Pkg
+
+function ensure_package()
+	dependencies = ("ArgParse", "JSON", "OrderedCollections", "HTTP")
+
+	for pkg in dependencies
+		isnothing(Base.find_package(pkg)) && Pkg.add(pkg)
+	end
+end
 
 
 # Read File and Return Non Empty Lines 
